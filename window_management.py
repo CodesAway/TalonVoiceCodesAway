@@ -21,7 +21,7 @@ ctx.lists["user.open_apps"] = {
     "keepass": f"{DROPBOX_PROGRAMS_DIRECTORY}/KeePass/KeePass.exe",
 }
 
-launch_apps_scope = ["obsidian", "task manager", "word", "code", "spotify"]
+launch_apps_scope = ["obsidian", "task manager", "word", "code", "spotify", "git hub"]
 ctx.lists["user.launch_apps_scope"] = launch_apps_scope
 
 # Populated on first run (don't worry about updating for now)
