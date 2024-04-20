@@ -7,6 +7,8 @@ ctx = Context()
 ctx.lists["user.codesaway_symbol_key"] = {
     "semi": ";",
     "quotes": '"',
+    "round": "(",
+    "right round": ")",
 }
 
 
