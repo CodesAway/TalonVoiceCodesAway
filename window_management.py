@@ -1,7 +1,8 @@
-from talon import actions, Module, Context, ui, registry
 import os
 import re
 from typing import Tuple
+
+from talon import Context, Module, actions, registry, ui
 
 DROPBOX_PROGRAMS_DIRECTORY = "%UserProfile%/Dropbox/Programs"
 
