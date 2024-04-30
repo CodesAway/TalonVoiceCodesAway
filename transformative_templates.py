@@ -5,6 +5,8 @@ from talon import Context, Module, actions, storage
 
 from ..andreas_talon.core.imgui import imgui
 
+# TODO: standardize naming - create acronym or something and change everything to use it
+
 mod = Module()
 mod.list("codesaway_template_variables", desc="template variables")
 
@@ -35,7 +37,7 @@ def gui_list_keys(gui: imgui.GUI):
 
     gui.spacer()
 
-    if gui.button("Temp close"):
+    if gui.button("Store close"):
         actions.user.hide_template_variables_list()
 
 
@@ -96,11 +98,12 @@ class Actions:
         """
         Clears template variable
         """
-        actions.user.store_template_variable(variable, "")
+        variables[variable] = ""
+        backup_template_variables()
 
     def clear_all_template_variables() -> None:
         """
-        Clear all template variables
+        Clears all template variables
         """
         for variable in variables.keys():
             variables[variable] = ""
@@ -112,6 +115,13 @@ class Actions:
         Deletes template variable
         """
         del variables[variable]
+        backup_template_variables()
+
+    def delete_all_template_variables() -> None:
+        """
+        Deletes all template variables
+        """
+        variables.clear()
         backup_template_variables()
 
     # Referenced: screen-spots

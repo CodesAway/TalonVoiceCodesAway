@@ -1,23 +1,36 @@
 os: windows
 -
+# Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
+# (has other edit commands)
 <number_small> up:          key("up:{number_small}")
 <number_small> down:        key("down:{number_small}")
 <number_small> left:        key("left:{number_small}")
 <number_small> right:       key("right:{number_small}")
 
+# Shift + key
 <number_small> ups:         key("shift-up:{number_small}")
 <number_small> downs:       key("shift-down:{number_small}")
 <number_small> lefts:       key("shift-left:{number_small}")
 <number_small> rights:      key("shift-right:{number_small}")
 
+# Ctrl + key (usually moves cursor)
 [<number_small>] word delete: key("ctrl-backspace:{number_small or 1}")
 [<number_small>] word deli: key("ctrl-delete:{number_small or 1}")
+
+[<number_small>] graph up:  key("ctrl-up:{number_small or 1}")
+[<number_small>] graph down: key("ctrl-down:{number_small or 1}")
+
 [<number_small>] word left: key("ctrl-left:{number_small or 1}")
 [<number_small>] word right: key("ctrl-right:{number_small or 1}")
+
+# Ctrl + shift + key (usually selects text)
+[<number_small>] graph ups: key("ctrl-shift-up:{number_small or 1}")
+[<number_small>] graph downs: key("ctrl-shift-down:{number_small or 1}")
 
 [<number_small>] word lefts: key("ctrl-shift-left:{number_small or 1}")
 [<number_small>] word rights: key("ctrl-shift-right:{number_small or 1}")
 
+# Tab
 [<number_small>] (tabby left | shift tabby): key("shift-tab:{number_small or 1}")
 [<number_small>] tabby [right]: key("tab:{number_small or 1}")
 
@@ -54,7 +67,9 @@ find <user.text>$:
     key("ctrl-f")
     sleep(50ms)
     insert(text or "")
+this new:                   key("ctrl-n")
 this open:                  key("ctrl-o")
+this print:                 key("ctrl-p")
 this save:                  edit.save()
 this paste:                 edit.paste()
 [<number_small>] redo:      key("ctrl-y:{number_small or 1}")

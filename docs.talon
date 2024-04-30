@@ -1,6 +1,9 @@
 app.exe: chrome.exe
 title: /Google Docs/
 -
+settings():
+    user.context_sensitive_dictation = true
+
 zero heading:               key("ctrl-alt-0")
 one heading:                key("ctrl-alt-1")
 two heading:                key("ctrl-alt-2")
