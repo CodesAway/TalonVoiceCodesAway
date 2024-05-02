@@ -9,8 +9,6 @@ store <user.text> <user.cursorless_target>:
     value = user.cursorless_get_text(cursorless_target)
     user.store_template_variable(text, value)
 
-stack clear:                user.clear_template_stack()
-
 stack <user.cursorless_target>:
     values = user.cursorless_get_text_list(cursorless_target)
     user.push_template_stack_list(values)

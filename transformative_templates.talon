@@ -16,3 +16,14 @@ store create <user.text>:
     user.store_template_variable(text, value)
 
 store assign <user.text> is <user.text>: user.store_template_variable(text_1, text_2)
+
+stack clear:                user.clear_template_stack()
+
+# Insert at cursor cursor position - "pop to this" would replace current
+pop here:
+    value = user.pop_template_stack()
+    insert(value)
+
+peek here:
+    value = user.peek_template_stack()
+    insert(value)
