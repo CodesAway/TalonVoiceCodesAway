@@ -1,5 +1,6 @@
 store show:                 user.show_template_variables_list()
 store close:                user.hide_template_variables_list()
+skats:                      user.toggle_template_stack()
 
 store clear {user.codesaway_template_variables}: user.clear_template_variable(codesaway_template_variables)
 store clear all:            user.clear_all_template_variables()

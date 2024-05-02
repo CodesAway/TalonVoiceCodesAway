@@ -1,4 +1,5 @@
 import re
+from collections import deque
 from io import StringIO
 
 from talon import Context, Module, actions, storage
@@ -9,9 +10,10 @@ from ..andreas_talon.core.imgui import imgui
 
 mod = Module()
 mod.list("codesaway_template_variables", desc="template variables")
+# mod.list("stack_template_variables", desc="stack")
 
 variables: dict[str, str] = storage.get("transformative_template_variables", {})
-
+stack: deque[str] = storage.get("stack_template_variables", deque())
 ctx = Context()
 # Have the list represent the keys (versus the entry)
 # This way, capture will have the key, which can be then used to process
@@ -39,6 +41,25 @@ def gui_list_keys(gui: imgui.GUI):
 
     if gui.button("Store close"):
         actions.user.hide_template_variables_list()
+
+
+@imgui.open(numbered=True)
+def draw_stack(gui: imgui.GUI):
+    gui.header("Stack")
+    gui.line()
+
+    for i, value in enumerate(stack):
+        # Show top without number (since number 1 is second element in deque)
+        if i == 0:
+            if gui.header(f"[peek] {value}", clickable=True):
+                print("clicked_num = ", i + 1)
+        elif gui.text(f"    {value}", clickable=True):
+            print("clicked_num = ", i + 1)
+
+    gui.spacer()
+
+    if gui.button("Skats"):
+        actions.user.hide_template_stack()
 
 
 def generate_regex(values: dict, transformations: dict) -> str:
@@ -83,6 +104,14 @@ def backup_template_variables():
     # Update list (otherwise won't see changes to variables)
     ctx.lists["user.codesaway_template_variables"] = variables.keys()
     storage.set("transformative_template_variables", variables)
+
+
+def backup_template_stack():
+    # TODO: errors since deque is not serializable
+    # Update list (otherwise won't see changes to variables)
+    # ctx.lists["user.codesaway_template_variables"] = variables.keys()
+    storage.set("stack_template_variables", stack)
+    print("backup_template_stack to stack_template_variables")
 
 
 @mod.action_class
@@ -132,3 +161,23 @@ class Actions:
     def hide_template_variables_list():
         """Hides the list of existing template variables"""
         gui_list_keys.hide()
+
+    def show_template_stack():
+        """Shows the stack"""
+        draw_stack.show()
+
+    def hide_template_stack():
+        """Hides the stack"""
+        draw_stack.hide()
+
+    def toggle_template_stack():
+        """Toggles the stack"""
+        if draw_stack.showing:
+            actions.user.hide_template_stack()
+        else:
+            actions.user.show_template_stack()
+
+    def push_template_stack(value: str):
+        """Push value on stack"""
+        stack.append(value)
+        backup_template_stack()
