@@ -1,3 +1,4 @@
+import json
 import re
 from collections import deque
 from io import StringIO
@@ -13,11 +14,23 @@ mod.list("codesaway_template_variables", desc="template variables")
 # mod.list("stack_template_variables", desc="stack")
 
 variables: dict[str, str] = storage.get("transformative_template_variables", {})
-stack: deque[str] = storage.get("stack_template_variables", deque())
+
 ctx = Context()
 # Have the list represent the keys (versus the entry)
 # This way, capture will have the key, which can be then used to process
 ctx.lists["user.codesaway_template_variables"] = variables.keys()
+
+# Serialize stack like list and then load it as deque (yields expected results)
+stack: deque[str] = deque(json.loads(storage.get("stack_template_variables", "")))
+
+
+# Reference: https://stackoverflow.com/a/61273028
+class DequeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, deque):
+            return list(obj)
+
+        return json.JSONEncoder.default(self, obj)
 
 
 # Referenced: screen-spots
@@ -51,9 +64,9 @@ def draw_stack(gui: imgui.GUI):
     for i, value in enumerate(stack):
         # Show top without number (since number 1 is second element in deque)
         if i == 0:
-            if gui.header(f"[peek] {value}", clickable=True):
+            if gui.header(f"  0   {value}", clickable=True):
                 print("clicked_num = ", i + 1)
-        elif gui.text(f"    {value}", clickable=True):
+        elif gui.text(f"{value}", clickable=True):
             print("clicked_num = ", i + 1)
 
     gui.spacer()
@@ -110,7 +123,10 @@ def backup_template_stack():
     # TODO: errors since deque is not serializable
     # Update list (otherwise won't see changes to variables)
     # ctx.lists["user.codesaway_template_variables"] = variables.keys()
-    storage.set("stack_template_variables", stack)
+    # storage.set("stack_template_variables", stack)
+    stack_json = json.dumps(stack, cls=DequeEncoder)
+    print("JSON:", stack_json)
+    storage.set("stack_template_variables", stack_json)
     print("backup_template_stack to stack_template_variables")
 
 
@@ -177,7 +193,24 @@ class Actions:
         else:
             actions.user.show_template_stack()
 
-    def push_template_stack(value: str):
-        """Push value on stack"""
-        stack.append(value)
+    def clear_template_stack():
+        """Clear stack"""
+        stack.clear()
         backup_template_stack()
+
+    def push_template_stack_list(values: list[str]):
+        """Push value on stack"""
+        for value in values:
+            stack.appendleft(value)
+
+        backup_template_stack()
+
+    def pop_template_stack():
+        """Pop value from stack"""
+        result = stack.popleft()
+        backup_template_stack()
+        return result
+
+    def peek_template_stack():
+        """Peek at top value of stack"""
+        return stack[0]
