@@ -214,3 +214,7 @@ class Actions:
     def peek_template_stack():
         """Peek at top value of stack"""
         return stack[0]
+
+    def peek_template_stack_index(index):
+        """Peek at top value of stack"""
+        return stack[index]

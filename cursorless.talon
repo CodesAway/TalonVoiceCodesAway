@@ -25,3 +25,7 @@ pop <user.cursorless_destination>:
 peek <user.cursorless_destination>:
     value = user.peek_template_stack()
     user.cursorless_insert(cursorless_destination, value)
+
+<user.ordinals_small> peek <user.cursorless_destination>:
+    value = user.peek_template_stack_index(ordinals_small)
+    user.cursorless_insert(cursorless_destination, value)
