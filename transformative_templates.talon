@@ -19,11 +19,21 @@ store assign <user.text> is <user.text>: user.store_template_variable(text_1, te
 
 stack clear:                user.clear_template_stack()
 
+stack delete <number>:      user.delete_template_stack_index(number)
+
 # Insert at cursor cursor position - "pop to this" would replace current
 pop here:
     value = user.pop_template_stack()
     insert(value)
 
+<user.ordinals_small> pop here:
+    value = user.pop_template_stack_index(ordinals_small)
+    insert(value)
+
 peek here:
     value = user.peek_template_stack()
+    insert(value)
+
+<user.ordinals_small> peek here:
+    value = user.peek_template_stack_index(ordinals_small)
     insert(value)

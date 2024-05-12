@@ -14,12 +14,25 @@ stack <user.cursorless_target>:
     user.push_template_stack_list(values)
     user.cursorless_command("remove", cursorless_target)
 
+<user.ordinals_small> stack <user.cursorless_target>:
+    values = user.cursorless_get_text_list(cursorless_target)
+    user.push_template_stack_list_index(ordinals_small, values)
+    user.cursorless_command("remove", cursorless_target)
+
 push <user.cursorless_target>:
     values = user.cursorless_get_text_list(cursorless_target)
     user.push_template_stack_list(values)
 
+<user.ordinals_small> push <user.cursorless_target>:
+    values = user.cursorless_get_text_list(cursorless_target)
+    user.push_template_stack_list_index(ordinals_small, values)
+
 pop <user.cursorless_destination>:
     value = user.pop_template_stack()
+    user.cursorless_insert(cursorless_destination, value)
+
+<user.ordinals_small> pop <user.cursorless_destination>:
+    value = user.pop_template_stack_index(ordinals_small)
     user.cursorless_insert(cursorless_destination, value)
 
 peek <user.cursorless_destination>:

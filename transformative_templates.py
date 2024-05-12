@@ -120,14 +120,8 @@ def backup_template_variables():
 
 
 def backup_template_stack():
-    # TODO: errors since deque is not serializable
-    # Update list (otherwise won't see changes to variables)
-    # ctx.lists["user.codesaway_template_variables"] = variables.keys()
-    # storage.set("stack_template_variables", stack)
     stack_json = json.dumps(stack, cls=DequeEncoder)
-    print("JSON:", stack_json)
     storage.set("stack_template_variables", stack_json)
-    print("backup_template_stack to stack_template_variables")
 
 
 @mod.action_class
@@ -198,23 +192,58 @@ class Actions:
         stack.clear()
         backup_template_stack()
 
+    def delete_template_stack_index(index: int):
+        """Delete value at index from stack"""
+        del stack[index]
+        backup_template_stack()
+
     def push_template_stack_list(values: list[str]):
         """Push value on stack"""
-        for value in values:
+        # Iterate in reverse order so 0th element in list will be at top
+        for value in reversed(values):
             stack.appendleft(value)
 
         backup_template_stack()
 
+    def push_template_stack_list_index(index: int, values: list[str]):
+        """Push values on stack at index"""
+        if index > len(stack):
+            print(f"index: {index} is out of bounds of stack with size {len(stack)}")
+            return
+        elif index == len(stack):
+            # Append to end
+            for value in values:
+                stack.append(value)
+
+            backup_template_stack()
+            return
+
+        stack.rotate(-index)
+
+        # Iterate in reverse order so 0th element in list will be at top
+        for value in reversed(values):
+            stack.appendleft(value)
+
+        stack.rotate(index)
+        backup_template_stack()
+
     def pop_template_stack():
-        """Pop value from stack"""
+        """Pop top value from stack"""
         result = stack.popleft()
         backup_template_stack()
         return result
 
+    def pop_template_stack_index(index: int):
+        """Pop value at index from stack"""
+        result = stack[index]
+        del stack[index]
+        backup_template_stack()
+        return result
+
     def peek_template_stack():
-        """Peek at top value of stack"""
+        """Peek top value of stack"""
         return stack[0]
 
-    def peek_template_stack_index(index):
-        """Peek at top value of stack"""
+    def peek_template_stack_index(index: int):
+        """Peek value at index of stack"""
         return stack[index]
