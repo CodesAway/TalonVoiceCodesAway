@@ -26,3 +26,7 @@ slot {self.letter} [{self.letter}]:
 this run:                   user.vscode_run_active()
 terminal close:             user.vscode("workbench.action.terminal.kill")
 terminal close all:         user.vscode("workbench.action.terminal.killAll")
+regex switch:               user.find_toggle_match_by_regex()
+
+view (next | down):         key(ctrl-down)
+view (last | previous | prev | up): key(ctrl-up)

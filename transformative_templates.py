@@ -21,7 +21,7 @@ ctx = Context()
 ctx.lists["user.codesaway_template_variables"] = variables.keys()
 
 # Serialize stack like list and then load it as deque (yields expected results)
-stack: deque[str] = deque(json.loads(storage.get("stack_template_variables", "")))
+stack: deque[str] = deque(json.loads(storage.get("stack_template_variables", "{}")))
 
 
 # Reference: https://stackoverflow.com/a/61273028
