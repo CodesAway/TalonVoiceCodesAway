@@ -24,6 +24,8 @@ slot {self.letter} [{self.letter}]:
     user.run_rpc_command("andreas.focusTab", "{letter_1}{letter_2 or ''}")
 
 this run:                   user.vscode_run_active()
+# Reference: community\apps\vscode\vscode.talon
+terminal open:              user.vscode("workbench.action.terminal.focus")
 terminal close:             user.vscode("workbench.action.terminal.kill")
 terminal close all:         user.vscode("workbench.action.terminal.killAll")
 regex switch:               user.find_toggle_match_by_regex()
