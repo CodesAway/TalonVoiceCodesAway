@@ -7,3 +7,8 @@ jumpy: key("ctrl-alt-;")
 
 bar left: key("alt-l")
 bar right: key("alt-r")
+
+open <user.text>:
+    key(ctrl-o)
+    sleep(50ms)
+    insert("{text}")
