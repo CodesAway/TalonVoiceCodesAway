@@ -13,4 +13,16 @@ namer create <user.text>:
     value = edit.selected_text()
     user.set_namer_variable(text, value)
 
+# TODO: Does not validate number already exists (should I add this?)
+namer set numb <user.number_string>:
+    value = edit.selected_text()
+    user.set_namer_variable(number_string, value)
+
+namer create numb <user.number_string>:
+    value = edit.selected_text()
+    user.set_namer_variable(number_string, value)
+
 namer assign <user.text> with <user.text>:      user.set_namer_variable(text_1, text_2)
+
+# Reference: community\core\snippets\snippets.talon
+namer snip {user.snippet}:                      user.insert_snippet_via_namer(snippet)

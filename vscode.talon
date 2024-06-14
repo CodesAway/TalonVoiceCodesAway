@@ -47,3 +47,6 @@ part right:                                     user.vscode("cursorWordPartRight
 
 move up:                                        edit.line_swap_up()
 move down:                                      edit.line_swap_down()
+
+none check <user.cursorless_target>:
+    user.insert_snippet_with_cursorless_target("nullCheck", "1", cursorless_target)

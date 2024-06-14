@@ -1,13 +1,14 @@
 import re
-from io import StringIO
 
 from talon import Context, Module, actions, storage
 
 # TODO: replace with standard imgui (or use try block to allow either)
-from ..andreas_talon.core.imgui import imgui
+from ..andreas_talon.core.imgui import GUI, ImGUI
+from ..community.core.snippets.snippet_types import Snippet
 
 mod = Module()
 mod.list("namer_variable", desc="namer variables")
+
 
 namer_variables: dict[str, str] = storage.get("namer.variables", {})
 
@@ -17,8 +18,8 @@ ctx = Context()
 ctx.lists["user.namer_variable"] = namer_variables.keys()
 
 
-@imgui.open(numbered=True)
-def gui_namer_variables(gui: imgui.GUI):
+@ImGUI.open(numbered=True)
+def gui_namer_variables(gui: GUI):
     gui.header("Variables")
     gui.line()
 
@@ -43,45 +44,6 @@ def backup_namer_variables():
     storage.set("namer.variables", namer_variables)
 
 
-def generate_regex(values: dict, transformations: dict) -> str:
-    values_list = []
-    for item in values.items():
-        values_list.append(item)
-        # TODO: support transformations
-        print(item)
-
-    values_list.sort(reverse=True, key=lambda e: len(e[1]))
-    result = StringIO()
-    for name, value in values_list:
-        if result.tell() != 0:
-            result.write("|")
-
-        result.write(f"(?P<{name}>{re.escape(value)})")
-
-    print(values_list)
-    regex = result.getvalue()
-    print(regex)
-
-    return regex
-
-
-def replacement(match: re.Match) -> str:
-    group_name = [e[0] for e in match.groupdict().items() if e[1] is not None][0]
-    return f"@{group_name}@"
-
-
-# TODO: write logic to use namer variables to generate snippets
-# values = {"value1": "ab", "valueA": "a", "value2": "bc"}
-# TODO: support transformations
-# transformations = {}
-
-# regex = generate_regex(values, transformations)
-# text = "a1 bc"
-# result = re.sub(regex, replacement, text)
-
-# print("Result:", result)
-
-
 @mod.action_class
 class Actions:
     def hide_namer_variables():
@@ -99,10 +61,13 @@ class Actions:
         else:
             actions.user.show_namer_variables()
 
+    # TODO: Need way to get variables so can filter and search for them
+
     def set_namer_variable(variable: str, value: str) -> None:
         """
         Sets namer variable
         """
+        # TODO: should namer_variables be sorted for ease of reference?
         namer_variables[variable] = value
         backup_namer_variables()
 
@@ -135,3 +100,22 @@ class Actions:
         """
         namer_variables.clear()
         backup_namer_variables()
+
+    # Based on community\core\snippets\snippets_insert.py -> insert_snippet_by_name
+    def insert_snippet_via_namer(name: str):
+        """Insert snippet <name>"""
+        snippet: Snippet = actions.user.get_snippet(name)
+        body = snippet.body
+
+        if namer_variables:
+            # TODO: alter to look through once and get replacement body (handling transformations)
+            for k, v in namer_variables.items():
+                reg = re.compile(rf"\${k}|\$\{{{k}\}}")
+                if not reg.search(body):
+                    # raise ValueError(
+                    #     f"Can't substitute non existing variable '{k}' in snippet '{name}'"
+                    # )
+                    continue
+                body = reg.sub(v, body)
+
+        actions.user.insert_snippet(body)
