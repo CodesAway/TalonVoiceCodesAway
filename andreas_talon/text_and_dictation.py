@@ -32,8 +32,7 @@ text_rule_parts = [
 text_rule = f"({'|'.join(text_rule_parts)})+"
 
 
-# TODO: have tag to allow enabling / disabling this?
-@ctx.capture(rule=text_rule)
+@ctx.capture("user.text", rule=text_rule)
 def text(m) -> str:
     """Mixed words, numbers and punctuation, including user-defined vocabulary, abbreviations and spelling."""
     return format_phrase(m)

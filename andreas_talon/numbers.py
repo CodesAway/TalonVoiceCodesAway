@@ -1,11 +1,7 @@
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/numbers/numbers.py
-from talon import Context, Module
+from talon import Module
 
 mod = Module()
-ctx = Context()
-# ctx.matches = r"""
-# tag: user.enable_andreas_talon
-# """
 
 
 @mod.capture(rule="<user.number_string> point <user.number_string>")

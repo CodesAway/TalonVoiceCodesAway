@@ -1,7 +1,7 @@
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/homophones/homophones.py
 import time
 
-from talon import Context, Module
+from talon import Module
 
 # a list of homophones where each line is a comma separated list
 # e.g. where,wear,ware
@@ -9,10 +9,6 @@ from talon import Context, Module
 # https://github.com/pimentel/homophones
 
 mod = Module()
-ctx = Context()
-# ctx.matches = r"""
-# tag: user.enable_andreas_talon
-# """
 
 homophones_last_used = {}
 
