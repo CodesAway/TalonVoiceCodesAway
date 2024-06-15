@@ -1,4 +1,4 @@
-skats:                                          user.toggle_skats_stack()
+^skats$:                                        user.toggle_skats_stack()
 stack clear:                                    user.clear_skats_stack()
 
 # Use ordinals for consistency
