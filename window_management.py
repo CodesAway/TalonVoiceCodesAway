@@ -41,7 +41,7 @@ def launcher_apps(app) -> tuple[str, str]:
     if len(launch_apps) == 0:
         for e in registry.lists["user.launch"][0].items():
             if e[0] in launch_apps_scope:
-                print(e[0], "->", e[1])
+                # print(e[0], "->", e[1])
                 launch_apps[e[0]] = e[1]
 
     # Convert from Capture to string

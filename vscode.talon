@@ -39,14 +39,17 @@ view (next | down):                             key(ctrl-down)
 group (last | previous | prev):                 user.vscode("workbench.action.focusPreviousGroup")
 group next:                                     user.vscode("workbench.action.focusNextGroup")
 
-recent edit (last | previous | prev):           user.vscode("workbench.action.openPreviousRecentlyUsedEditor")
-recent edit next:                               user.vscode("workbench.action.openNextRecentlyUsedEditor")
+recent editor (last | previous | prev):         user.vscode("workbench.action.openPreviousRecentlyUsedEditor")
+recent editor next:                             user.vscode("workbench.action.openNextRecentlyUsedEditor")
 
 part left:                                      user.vscode("cursorWordPartLeft")
 part right:                                     user.vscode("cursorWordPartRight")
 
 move up:                                        edit.line_swap_up()
 move down:                                      edit.line_swap_down()
+
+editor left:                                    key(ctrl-shift-pageup)
+editor right:                                   key(ctrl-shift-pagedown)
 
 none check <user.cursorless_target>:
     user.insert_snippet_with_cursorless_target("nullCheck", "1", cursorless_target)
