@@ -1,23 +1,27 @@
 import re
 from io import StringIO
 
-from talon import Module, actions, clip, storage
+from talon import Context, Module, actions, clip, settings, storage
 
 # TODO: replace with standard imgui (or use try block to allow either)
 from ..andreas_talon.core.imgui import GUI, ImGUI
 from ..community.core.snippets.snippet_types import Snippet
 
 mod = Module()
+mod.list("namer_variable", "namer variables")
 
+ctx = Context()
 
 namer_variables: dict[str, str] = storage.get("namer.variables", {})
 namer_variables_keys = list(namer_variables.keys())
+ctx.lists["user.namer_variable"] = namer_variables_keys
+
 # TODO: support user defined transformations (via methods)
 transformations = []
 
 
 @ImGUI.open(numbered=True)
-def gui_namer_variables(gui: GUI):
+def namer_gui_variables(gui: GUI):
     gui.header("Variables")
     gui.line()
 
@@ -28,18 +32,19 @@ def gui_namer_variables(gui: GUI):
             # TODO: What should clicking on the variable do?
             # Is this even needed?
             print("clicked_num = ", i + 1)
-            actions.user.hide_namer_variables()
+            actions.user.namer_hide_variables()
 
     gui.spacer()
 
     if gui.button("Namer"):
-        actions.user.hide_namer_variables()
+        actions.user.namer_hide_variables()
 
 
-def backup_namer_variables():
+def namer_backup_variables():
     global namer_variables_keys
     storage.set("namer.variables", namer_variables)
     namer_variables_keys = list(namer_variables.keys())
+    ctx.lists["user.namer_variable"] = namer_variables_keys
 
 
 def namer_snip_replacement(values: dict, transformations: dict, body: str) -> str:
@@ -85,82 +90,82 @@ def namer_snip_replacement(values: dict, transformations: dict, body: str) -> st
 
 @mod.action_class
 class Actions:
-    def hide_namer_variables():
+    def namer_hide_variables():
         """Hides the GUI for namer variables"""
-        gui_namer_variables.hide()
+        namer_gui_variables.hide()
 
-    def show_namer_variables():
+    def namer_show_variables():
         """Shows the GUI for namer variables"""
-        gui_namer_variables.show()
+        namer_gui_variables.show()
 
-    def toggle_namer_variables():
+    def namer_toggle_variables():
         """Toggles the GUI for namer variables"""
-        if gui_namer_variables.showing:
-            actions.user.hide_namer_variables()
+        if namer_gui_variables.showing:
+            actions.user.namer_hide_variables()
         else:
-            actions.user.show_namer_variables()
+            actions.user.namer_show_variables()
 
     # TODO: Need way to get variables so can filter and search for them
-    def get_namer_variable(variable: str):
+    def namer_get_variable(variable: str):
         """Gets namer variable"""
         return namer_variables[variable]
 
-    def set_namer_variable(variable: str, value: str) -> None:
+    def namer_set_variable(variable: str, value: str) -> None:
         """
         Sets namer variable
         """
         # TODO: should namer_variables be sorted for ease of reference?
         namer_variables[variable] = value
-        backup_namer_variables()
+        namer_backup_variables()
 
-    def strip_namer_variable(variable: str):
+    def namer_strip_variable(variable: str):
         """Strips namer variable (removes leading / trailing whitespace)"""
         namer_variables[variable] = namer_variables[variable].strip()
-        backup_namer_variables()
+        namer_backup_variables()
 
-    def copy_namer_variable(variable: str):
+    def namer_copy_variable(variable: str):
         """Copies current text to clipboard and sets as namer variable"""
 
         # Workaround, since using actions.edit.copy() seemed to have timing issue (had old clipboard contents stored)
         value = actions.edit.selected_text()
         clip.set_text(value)
 
-        actions.user.clipboard_namer_variable(variable)
+        actions.user.namer_clipboard_variable(variable)
 
-    def clipboard_namer_variable(variable: str):
+    def namer_clipboard_variable(variable: str):
         """Sets namer variable to clipboard contents"""
         value = clip.text()
-        actions.user.set_namer_variable(variable, value)
+        actions.user.namer_set_variable(variable, value)
 
-    def clear_namer_variable(variable: str) -> None:
+    def namer_clear_variable(variable: str) -> None:
         """
         Clears namer variable (sets to blank)
         """
         namer_variables[variable] = ""
-        backup_namer_variables()
+        namer_backup_variables()
 
-    def clear_all_namer_variables() -> None:
+    def namer_clear_all_variables() -> None:
         """
         Clears all namer variables (sets to blank)
         """
         for variable in namer_variables.keys():
             namer_variables[variable] = ""
 
-        backup_namer_variables()
+        namer_backup_variables()
 
-    def delete_namer_variable(variable: str) -> None:
+    def namer_delete_variable(variable: str) -> None:
         """
         Deletes namer variable
         """
         del namer_variables[variable]
-        backup_namer_variables()
+        namer_backup_variables()
 
-    def delete_all_namer_variables() -> None:
+    def namer_delete_all_variables() -> None:
         """
         Deletes all namer variables
         """
         namer_variables.clear()
-        backup_namer_variables()
+        namer_backup_variables()
 
     # Based on community\core\snippets\snippets_insert.py -> insert_snippet_by_name
     def namer_insert_snippet(name: str):
@@ -184,6 +189,9 @@ class Actions:
     def namer_make_snippet(name: str, body: str):
         """Makes snippet"""
         result = namer_snip_replacement(namer_variables, transformations, body)
+        snippets_dir = settings.get("user.snippets_dir")
+        print("snippets_dir:", snippets_dir)
+        print("language:", actions.code.language())
 
         print("namer_make_snippet:")
         print(result)
