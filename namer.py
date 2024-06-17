@@ -1,5 +1,7 @@
+import logging
 import re
 from io import StringIO
+from pathlib import Path
 
 from talon import Context, Module, actions, clip, settings, storage
 
@@ -17,7 +19,7 @@ namer_variables_keys = list(namer_variables.keys())
 ctx.lists["user.namer_variable"] = namer_variables_keys
 
 # TODO: support user defined transformations (via methods)
-transformations = []
+transformations = {}
 
 
 @ImGUI.open(numbered=True)
@@ -31,7 +33,7 @@ def namer_gui_variables(gui: GUI):
         if gui.text(f"{variable}:\n{value}", clickable=True):
             # TODO: What should clicking on the variable do?
             # Is this even needed?
-            print("clicked_num = ", i + 1)
+            logging.debug("clicked_num = ", i + 1)
             actions.user.namer_hide_variables()
 
     gui.spacer()
@@ -188,10 +190,60 @@ class Actions:
 
     def namer_make_snippet(name: str, body: str):
         """Makes snippet"""
-        result = namer_snip_replacement(namer_variables, transformations, body)
-        snippets_dir = settings.get("user.snippets_dir")
-        print("snippets_dir:", snippets_dir)
-        print("language:", actions.code.language())
 
-        print("namer_make_snippet:")
-        print(result)
+        logging.debug("namer_make_snippet:")
+
+        snippets_dir = settings.get("user.snippets_dir")
+        logging.debug(f"snippets_dir: {snippets_dir}")
+
+        snippet_name = actions.user.reformat_text(name, "camel")
+        logging.debug(f"name: {snippet_name}")
+
+        language = actions.code.language()
+        logging.debug(f"language: {language}")
+
+        snippet_body = namer_snip_replacement(namer_variables, transformations, body)
+        logging.debug(snippet_body)
+
+        user_path = Path(actions.path.talon_user())
+        logging.debug(f"user_path: {user_path}")
+
+        if snippets_dir:
+            directory = user_path / snippets_dir
+        else:
+            directory = user_path / "community/core/snippets"
+
+        # TODO: add cleanup to remove invalid characters
+        filename = f"{snippet_name}.snippet"
+        snippet_path = directory / filename
+        logging.debug(f"directory: {directory}")
+        logging.debug(f"filename: {filename}")
+
+        snippet = f"""name: {snippet_name}
+phrase: {name}
+language: {language}
+-
+{snippet_body}$0
+---
+"""
+        logging.debug("snippet:")
+        logging.debug(snippet)
+
+        if not directory.exists():
+            logging.error(f"Directory does not exist: {directory}")
+            return
+
+        if snippet_path.exists():
+            existing_text = snippet_path.read_text()
+            stripped_existing_text = existing_text.strip()
+            logging.debug("existing text:")
+            logging.debug(existing_text)
+
+            if not stripped_existing_text.endswith("---"):
+                snippet = "---\n" + snippet
+
+            if not existing_text.endswith("\n"):
+                snippet = "\n" + snippet
+
+        with snippet_path.open("a") as myfile:
+            myfile.write(snippet)

@@ -46,6 +46,6 @@ namer peek <user.text>:
 # Reference: community\core\snippets\snippets.talon
 namer snip {user.snippet}:                      user.namer_insert_snippet(snippet)
 
-namer make snip <user.text>:
+namer make <user.text>:
     snip = edit.selected_text()
     user.namer_make_snippet(text, snip)

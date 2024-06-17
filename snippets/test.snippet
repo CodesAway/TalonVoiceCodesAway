@@ -1,0 +1,17 @@
+name: codeQuote2
+phrase: code two
+
+$0.wrapperPhrase: code
+-
+```
+@$0@
+${amy}
+${5} is something
+```
+---
+name: test
+phrase: test
+language: talon
+-
+namer ${amy} <user.${5}>:                         user.namer_${amy}board_variable(${5})$0
+---
