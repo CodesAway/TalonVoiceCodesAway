@@ -1,4 +1,6 @@
+import logging
 import re
+
 from talon import Module, actions, ui
 
 mod = Module()
@@ -13,15 +15,15 @@ class Actions:
         vscode = ui.active_window()
         title = vscode.title
         if re.search(r"(?:\.sql|Untitled-\d+).*(?<=- Visual Studio Code)$", title):
-            print("TODO: Implement SQL: ctrl-shift-e...")
+            logging.warning("TODO: Implement SQL: ctrl-shift-e...")
         elif re.search(r"\.java.*(?<=- Visual Studio Code)$", title):
-            print("Run Java:", title)
+            logging.debug(f"Run Java: {title}")
             actions.user.vscode("java.debug.runJavaFile")
         elif re.search(r"\.py.*(?<=- Visual Studio Code)$", title):
-            print("Run Python:", title)
+            logging.debug(f"Run Python: {title}")
             actions.user.vscode("python.execInTerminal")
         else:
-            print(vscode.app.exe)
-            print(title)
+            logging.debug(vscode.app.exe)
+            logging.debug(title)
             # Terminal: Run Active File In Active Terminal
             actions.user.vscode("workbench.action.terminal.runActiveFile")

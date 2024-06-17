@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from typing import Tuple
@@ -64,11 +65,11 @@ class Actions:
         for cur_app in foreground_apps:
             # print("Check:", cur_app.exe)
             if cur_app.exe == expand_path:
-                print("Focus: " + path)
+                logging.debug(f"Focus: {path}")
                 cur_app.focus()
                 return
 
-        print("Launch:", path)
+        logging.debug(f"Launch: {path}")
         actions.user.switcher_launch(expand_path)
 
     # TODO: how to specify that it really is a tuple[str, str]?
@@ -137,7 +138,7 @@ def find_window(normalized_title="", normalized_executable="", ignore_active=Fal
             continue
 
         # TODO: currently just match first instance (could give score and match best match)
-        print(f"Found ({window.app.exe})! {window.title}")
+        logging.debug(f"Found ({window.app.exe})! {window.title}")
         return window
 
     return None

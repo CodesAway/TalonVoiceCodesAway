@@ -1,5 +1,7 @@
 # Referenced: community\plugin\mouse\mouse.py
 
+import logging
+
 from talon import Context, Module, actions, cron, ctrl
 
 mod = Module()
@@ -45,7 +47,7 @@ def start_mouse_move():
     mouse_move_job = cron.interval("60ms", mouse_move_continuous_helper)
     auto_mouse_mode = True
     ctx.tags = ["user.mouse_mode"]
-    print("auto_mouse_mode")
+    logging.debug("auto_mouse_mode")
 
 
 def stop_mouse_move():
@@ -60,7 +62,7 @@ def stop_mouse_move():
     auto_mouse_mode = False
     if not user_mouse_mode:
         ctx.tags = []
-        print("done auto_mouse_mode")
+        logging.debug("done auto_mouse_mode")
 
     mouse_move_amount_x = 0
     mouse_move_amount_y = 0
@@ -111,10 +113,10 @@ class Actions:
 
         if user_mouse_mode:
             ctx.tags = ["user.mouse_mode"]
-            print("user_mouse_mode")
+            logging.debug("user_mouse_mode")
         elif not auto_mouse_mode:
             ctx.tags = []
-            print("done user_mouse_mode")
+            logging.debug("done user_mouse_mode")
 
     def relative_mouse_move_direction(direction: str, amount: int = 0):
         """Move the cursor to the relative position in the specified direction"""

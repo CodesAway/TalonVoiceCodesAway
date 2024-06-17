@@ -1,4 +1,6 @@
-from talon import actions, Module, speech_system
+import logging
+
+from talon import Module, actions, speech_system
 
 mod = Module()
 
@@ -25,7 +27,7 @@ class Actions:
         elif command_text == "media pause":
             actions.key("stop")
         else:
-            print("Unknown media_play_pause:", command_text)
+            logging.error(f"Unknown media_play_pause: {command_text}")
 
 
 last_phrase = None

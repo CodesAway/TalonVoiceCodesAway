@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import deque
 
 from talon import Module, actions, storage
@@ -33,9 +34,9 @@ def gui_skats_stack(gui: imgui.GUI):
         # Is this even needed?
         if i == 0:
             if gui.header(f"  0   {value}", clickable=True):
-                print("clicked_num = ", i + 1)
+                logging.debug(f"clicked_num = {i + 1}")
         elif gui.text(f"{value}", clickable=True):
-            print("clicked_num = ", i + 1)
+            logging.debug(f"clicked_num = {i + 1}")
 
     gui.spacer()
 
@@ -91,7 +92,7 @@ class Actions:
     def push_skats_stack_index_list(index: int, values: list[str]):
         """Push values on stack at index"""
         if index > len(skats_stack):
-            print(
+            logging.debug(
                 f"index: {index} is out of bounds of stack with size {len(skats_stack)}"
             )
             return
