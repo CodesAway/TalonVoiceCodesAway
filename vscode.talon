@@ -14,6 +14,7 @@ focus editor:
 
 lower case:                                     user.vscode("editor.action.transformToLowercase")
 settings open:                                  key("ctrl-,")
+save sin:                                       user.vscode("workbench.action.files.saveWithoutFormatting")
 
 # Workaround since VSCode is only app which standard maximize doesn't seem to work
 # Requires changing PowerToys Run command (switched to Win-space)
