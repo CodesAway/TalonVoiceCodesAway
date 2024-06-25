@@ -4,24 +4,51 @@ import logging
 
 from talon import Context, Module, actions, cron, ctrl
 
+mouse_move_speed_default = 5
+
 mod = Module()
 mod.tag("mouse_mode", "Allow shorter mouse specific commands")
+# https://talon.wiki/Customization/Talon%20Framework/settings
+
+mod.setting(
+    "codesaway_mouse_move_speed",
+    type=int,
+    default=mouse_move_speed_default,
+    desc="speed at which to move mouse in continuous mouse move mode",
+)
 
 mouse_move_job = None
 mouse_move_amount_x = 0
 mouse_move_amount_y = 0
 prior_mouse_x = 0
 prior_mouse_y = 0
-mouse_move_speed = 1
 
 # TODO: add setting for mouse_move_continous_default (3) and mouse_move_default (60)
-mouse_move_continuous_default = 3
+mouse_move_continuous_default = 1
 mouse_move_default = 60
 
 auto_mouse_mode = False
 user_mouse_mode = False
 
 ctx = Context()
+
+
+def set_mouse_move_speed(mouse_move_speed: int):
+    ctx.settings["user.codesaway_mouse_move_speed"] = mouse_move_speed
+
+
+def get_mouse_move_speed():
+    if "user.codesaway_mouse_move_speed" not in ctx.settings:
+        set_mouse_move_speed(mouse_move_speed_default)
+        return mouse_move_speed_default
+
+    mouse_move_speed = ctx.settings["user.codesaway_mouse_move_speed"]
+
+    if not mouse_move_speed:
+        set_mouse_move_speed(mouse_move_speed_default)
+        return mouse_move_speed_default
+
+    return mouse_move_speed
 
 
 def mouse_move_continuous_helper():
@@ -35,6 +62,7 @@ def mouse_move_continuous_helper():
 
     # print("scroll_continuous_helper")
     if mouse_move_amount_x or mouse_move_amount_y:
+        mouse_move_speed = get_mouse_move_speed()
         relative_x = mouse_move_amount_x * mouse_move_speed
         relative_y = mouse_move_amount_y * mouse_move_speed
         actions.user.relative_mouse_move(relative_x, relative_y)
@@ -140,16 +168,19 @@ class Actions:
     def mouse_move_speed(speed: int = 0):
         """Adjust move speed relative to current speed (or 0 to reset)"""
         # print("mouse_move_speed:", speed)
-        global mouse_move_speed
         if speed == 0:
-            mouse_move_speed = 1
+            set_mouse_move_speed(mouse_move_speed_default)
             return
+
+        mouse_move_speed = get_mouse_move_speed()
 
         mouse_move_speed += speed
         if mouse_move_speed < 1:
             mouse_move_speed = 1
         elif mouse_move_speed > 10:
             mouse_move_speed = 10
+
+        set_mouse_move_speed(mouse_move_speed)
 
     def mouse_move_continuous_direction(direction: str):
         """Move the cursor to the relative position in the specified direction"""
