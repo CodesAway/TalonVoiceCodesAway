@@ -1,4 +1,3 @@
-import logging
 import os
 import sqlite3
 import time
@@ -7,10 +6,12 @@ from operator import itemgetter
 from pathlib import Path
 from sqlite3 import Connection
 
-from talon import actions, app, cron
+from talon import Module, actions, app, cron, imgui
+
+mod = Module()
 
 # TODO: Have cron job index (with option to index on command)
-should_index_files_on_ready = True
+should_index_files_on_ready = False
 
 # TODO: add support for full reindex via voice (set all version numbers to 0)
 # (dropping table should only be needed in rare updates when table structure changes)
@@ -103,6 +104,24 @@ limit 25
 # SELECT *
 # FROM {TABLE_NAME}('python OR java');
 # """
+
+
+@imgui.open()
+def fishy_gui_search_results(gui: imgui.GUI):
+    gui.text("Search Results")
+    gui.line()
+    search_results = search("freecom*")
+    for i, search_result in enumerate(search_results):
+        directory = search_result["directory"]
+        filename = search_result["filename"]
+
+        gui.text(f"{i+1:02d}: {directory}")
+        gui.text(f"{filename}")
+
+        gui.spacer()
+
+    if gui.button("Fishy"):
+        actions.user.fishy_hide_search_results()
 
 
 def create_file_dictionary(directory: str, filename: str):
@@ -353,6 +372,9 @@ def index_files():
     print("Execution time:", elapsed_time, "seconds")
 
 
+# TODO: show only 10 results and show directory / filename on separate lines with spacer?
+# Enable paging (like done for help)
+# This may help make results easier to read
 def search(FULL_TEXT_SEARCH_TEXT):
     # Note: -e.priority desc will sort NULL / no priority last (since descending)
     # Negative ensures that, for example, priority 0 comes before priority 1
@@ -366,8 +388,10 @@ def search(FULL_TEXT_SEARCH_TEXT):
     FROM {TABLE_NAME}("{FULL_TEXT_SEARCH_TEXT}") f
     left join extension_xref e on e.extension = f.extension
     order by f.rank, -e.priority desc
-    limit 25
+    limit 10
     """
+
+    search_results = []
 
     with sqlite3.connect(database_pathname) as connection:
         cursor = connection.execute(FULL_TEXT_SEARCH)
@@ -376,8 +400,10 @@ def search(FULL_TEXT_SEARCH_TEXT):
             row_dict["filename"] = determine_filename(
                 row_dict["name"], row_dict["extension"]
             )
+            # logging.info(os.path.join(row_dict["directory"], row_dict["filename"]))
+            search_results.append(row_dict)
 
-            logging.info(os.path.join(row_dict["directory"], row_dict["filename"]))
+        return search_results
 
         # print()
         # print("Directories:")
@@ -408,3 +434,21 @@ def on_ready():
 
 
 app.register("ready", on_ready)
+
+
+@mod.action_class
+class Actions:
+    def fishy_hide_search_results():
+        """Hides the GUI for fishy search results"""
+        fishy_gui_search_results.hide()
+
+    def fishy_show_search_results():
+        """Shows the GUI for fishy search results"""
+        fishy_gui_search_results.show()
+
+    def fishy_toggle_search_results():
+        """Toggles the GUI for fishy search results"""
+        if fishy_gui_search_results.showing:
+            actions.user.fishy_hide_search_results()
+        else:
+            actions.user.fishy_show_search_results()
