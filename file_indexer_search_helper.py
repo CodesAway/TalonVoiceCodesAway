@@ -11,7 +11,7 @@ from talon import Module, actions, app, cron, imgui
 mod = Module()
 
 # TODO: Have cron job index (with option to index on command)
-should_index_files_on_ready = False
+should_index_files_on_ready = True
 
 # TODO: add support for full reindex via voice (set all version numbers to 0)
 # (dropping table should only be needed in rare updates when table structure changes)
@@ -425,10 +425,14 @@ def on_ready():
         actions.path.talon_user(), "file_indexer_search_helper.db"
     )
     create_database(database_pathname)
-    if should_index_files_on_ready:
-        index_files()
 
-    cron.interval("300s", index_files)
+    # TODO: Run indexing on separate thread
+    # (so doesn't cause imgui to wait for indexing to finish before responds)
+
+    if should_index_files_on_ready:
+        cron.after("0s", index_files)
+
+    cron.interval("600s", index_files)
 
     # search("ada dis*")
 
