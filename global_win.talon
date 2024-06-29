@@ -1,14 +1,5 @@
 os: windows
 -
-tag(): user.cursorless_use_community_snippets
-
-settings():
-    user.mouse_enable_pop_click = 2
-    user.snippets_dir = "TalonVoiceCodesAway/snippets"
-    # user.mouse_enable_hiss_scroll = true
-    # Try longer timeout (default 0.3, so I have more time to pause and think)
-    speech.timeout = 0.4
-
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/operating_system/operating_system.talon
 ^system shutdown$:                              user.exec("shutdown /s")
 ^system restart$:                               user.exec("shutdown /r")
@@ -70,10 +61,10 @@ boom:                                           insert(", ")
 # PowerToys Run
 # (used instead of Fluent Search which TRS didn't allow and got me fired)
 # TODO: need to implements
-run show:                                       key("alt-space")
+# run show:                                       key("alt-space")
 
-# CopyQ ClipsCustom global hotkey
-clip show:                                      key("ctrl-alt-shift-f10")
+# CopyQ Custom global hotkey
+# clip show:                                      key("ctrl-alt-shift-f10")
 
 apps:                                           key("menu")
 
@@ -95,51 +86,3 @@ hunt <user.text>$:
     key("ctrl-f")
     sleep(50ms)
     insert(text or "")
-
-# user\community\core\text\formatters.py
-# code_formatter_names = {                      # TODO: add Caster version for ones which previously used?
-#     "all cap": "ALL_CAPS",                    # yell
-#     "all down": "ALL_LOWERCASE",              # laws
-#     "camel": "PRIVATE_CAMEL_CASE",
-#     "dotted": "DOT_SEPARATED",                # peble
-#     "dub string": "DOUBLE_QUOTED_STRING",
-#     "dunder": "DOUBLE_UNDERSCORE",
-#     "hammer": "PUBLIC_CAMEL_CASE",
-#     "kebab": "DASH_SEPARATED",                # spine
-#     "packed": "DOUBLE_COLON_SEPARATED",
-#     "padded": "SPACE_SURROUNDED_STRING",
-#     "slasher": "SLASH_SEPARATED",             # incline
-#     "smash": "NO_SPACES",                     # gum / gun
-#     "snake": "SNAKE_CASE",
-#     "string": "SINGLE_QUOTED_STRING",
-# }
-# prose_formatter_names = {
-#     "say": "NOOP",
-#     "speak": "NOOP",
-#     "sentence": "CAPITALIZE_FIRST_WORD",      # sing
-#     "title": "CAPITALIZE_ALL_WORDS",          # tie
-# }
-
-# TODO: convert from Caster to Talon
-# Choice(
-#     "spacing",
-#     {
-#         "dissent": 6,  # backslash\words
-#         "descent": 6,  # backslash\words
-#     },
-# ),
-
-# TODO: Convert from Caster to Talon
-# (might use existing stuff first and just call it using the commands below)
-# # Mouse control (based on Dragon)
-# "<mouse_dir> mouse move": R(Function(mouse_move)),
-# "<mouse_dir> mouse drag": R(Function(mouse_drag)),
-# "mouse focus left": R(
-#     Mimic("MouseGrid", "four", "click")
-# ),  # Used in training to focus on window (inner content)
-# "mouse focus": R(
-#     Mimic("MouseGrid", "five", "click")
-# ),  # Used in training to focus on window (inner content)
-# "mouse focus right": R(
-#     Mimic("MouseGrid", "six", "click")
-# ),  # Used in training to focus on window (inner content)
