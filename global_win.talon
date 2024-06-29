@@ -6,6 +6,15 @@ settings():
     user.mouse_enable_pop_click = 2
     user.snippets_dir = "TalonVoiceCodesAway/snippets"
     # user.mouse_enable_hiss_scroll = true
+    # Try longer timeout (default 0.3, so I have more time to pause and think)
+    speech.timeout = 0.4
+
+# Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/operating_system/operating_system.talon
+^system shutdown$:                              user.exec("shutdown /s")
+^system restart$:                               user.exec("shutdown /r")
+^system lock$:
+    user.sleep_all()
+    user.exec("Rundll32.exe user32.dll,LockWorkStation")
 
 # Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
 # (has other edit commands)
