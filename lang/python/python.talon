@@ -5,6 +5,8 @@ var <user.text>:                                insert(user.reformat_text(text, 
 # Extends what's in functions.talon to allow customize types (basic types in python.py)
 type <user.text>:                               insert(user.reformat_text(text, "hammer"))
 no args:                                        insert('()')
+return False:                                   "return False"
+return True:                                    "return True"
 return <user.text>:                             insert('return {user.reformat_text(text, "snake")}')
 global <user.text>:                             insert('global {user.reformat_text(text, "snake")}')
 
@@ -15,3 +17,7 @@ state <user.code_type> <user.text>:             insert('{code_type} {user.reform
 # Couldn't find way to insert "not" for negation
 op not:                                         insert('not ')
 type int:                                       insert('int')
+
+# TODO: delete once close https://github.com/talonhub/community/issues/1468
+state break:                                    "break"
+state (continue | next):                        "continue"

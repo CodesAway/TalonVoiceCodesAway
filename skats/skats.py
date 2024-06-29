@@ -5,7 +5,7 @@ from collections import deque
 from talon import Module, actions, storage
 
 # TODO: replace with standard imgui (or use try block to allow either)
-from ..andreas_talon.core.imgui import imgui
+from ...andreas_talon.core.imgui import GUI, ImGUI
 
 mod = Module()
 
@@ -23,8 +23,8 @@ class DequeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-@imgui.open(numbered=True)
-def gui_skats_stack(gui: imgui.GUI):
+@ImGUI.open(numbered=True)
+def gui_skats_stack(gui: GUI):
     gui.header("Stack")
     gui.line()
 

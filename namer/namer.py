@@ -6,8 +6,8 @@ from pathlib import Path
 from talon import Context, Module, actions, clip, settings, storage
 
 # TODO: replace with standard imgui (or use try block to allow either)
-from ..andreas_talon.core.imgui import GUI, ImGUI
-from ..community.core.snippets.snippet_types import Snippet
+from ...andreas_talon.core.imgui import GUI, ImGUI
+from ...community.core.snippets.snippet_types import Snippet
 
 mod = Module()
 mod.list("namer_variable", "namer variables")
