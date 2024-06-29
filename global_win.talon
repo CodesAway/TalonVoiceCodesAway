@@ -85,4 +85,10 @@ this refresh:                                   key("f5")
 hunt <user.text>$:
     key("ctrl-f")
     sleep(50ms)
-    insert(text or "")
+    insert(text)
+
+# Referenced: community\tags\find_and_replace\find_and_replace.talon
+hunt all <user.text>:
+    key("ctrl-shift-f")
+    sleep(50ms)
+    insert(text)
