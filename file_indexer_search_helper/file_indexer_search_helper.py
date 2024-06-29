@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 import time
@@ -68,6 +69,8 @@ CREATE_VIRTUAL_TABLE = f"""
 CREATE VIRTUAL TABLE IF NOT EXISTS {TABLE_NAME}
 USING FTS5(directory, name, extension, size, modified_time, version);
 """
+
+SELECT_COUNT = f"select count(1) as count from {TABLE_NAME}"
 
 # TODO: support deleted directories (should delete from database)
 # For example, if doesn't iterate due to ignoring directory
@@ -153,11 +156,8 @@ def create_database(database_pathname):
 
         connection.execute(CREATE_VIRTUAL_TABLE)
         connection.commit()
-        print(
-            "Existing: ",
-            connection.execute(
-                f"select count(1) as count from {TABLE_NAME}"
-            ).fetchone()[0],
+        logging.debug(
+            f"FISHy Existing: {connection.execute(SELECT_COUNT).fetchone()[0]}"
         )
 
         if should_perform_full_reindex:
@@ -215,13 +215,9 @@ def index_files():
             row_dict["filename"] = determine_filename(
                 row_dict["name"], row_dict["extension"]
             )
-            # print("row_dict:", row_dict)
             existing_files[row_dict["directory"]].append(row_dict)
 
-    last_output_index = 0
-    current_index = 0
-    progress_file_count = 1000
-    print("Walk:", root_path)
+    logging.debug(f"FISHy walk: {root_path}")
 
     # TODO: replace path.walk with os.walk
     # (since Talon is currently on Python 3.11 and path.walk was added in 3.12)
@@ -245,15 +241,8 @@ def index_files():
 
         files.sort()
 
-        # TODO: change this to correctly show progress
-        # (won't show progress for initial index, since 0 existing rows, so current_index is always 0)
-        if current_index >= last_output_index + progress_file_count:
-            last_output_index = current_index
-            print("Checking files for", directory)
-
         existing_rows = existing_files[directory]
         existing_rows.sort(key=itemgetter("filename"))
-        current_index += len(existing_rows)
 
         existing_index = 0
         pathwalk_index = 0
@@ -357,19 +346,19 @@ def index_files():
 
         connection.commit()
 
-        print(f"Updated {update_count} files in database")
-        print(
-            f"Inserted {len(insert_files) - update_count} files from {str(root_path)}"
+        logging.debug(f"FISHy Updated {update_count} files in database")
+        logging.debug(
+            f"FISHy Inserted {len(insert_files) - update_count} files from {str(root_path)}"
         )
-        print(
-            f"Deleted {len(delete_records) - update_count + delete_directories_cursor.rowcount} records from database"
+        logging.debug(
+            f"FISHy Deleted {len(delete_records) - update_count + delete_directories_cursor.rowcount} records from database"
         )
 
     end_time = time.time()
 
     # get the execution time
     elapsed_time = end_time - start_time
-    print("Execution time:", elapsed_time, "seconds")
+    logging.debug(f"FISHy Execution time: {elapsed_time} seconds")
 
 
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
@@ -428,6 +417,8 @@ def on_ready():
 
     # TODO: Run indexing on separate thread
     # (so doesn't cause imgui to wait for indexing to finish before responds)
+    # TODO: use subprocess (such as system_command_nb)
+    # https://talonvoice.slack.com/archives/C7ENXA7C4/p1719603988033169
 
     if should_index_files_on_ready:
         cron.after("0s", index_files)
