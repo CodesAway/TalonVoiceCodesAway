@@ -160,20 +160,13 @@ def create_database(database_pathname):
             f"FISHy Existing: {connection.execute(SELECT_COUNT).fetchone()[0]}"
         )
 
+        # https://www.techonthenet.com/sqlite/auto_vacuum.php
+        connection.execute("VACUUM")
+        connection.commit()
+
         if should_perform_full_reindex:
             connection.execute(f"update {TABLE_NAME} set version = 0")
             connection.commit()
-
-
-def get_existing_directories(database_pathname):
-    with sqlite3.connect(database_pathname) as connection:
-        return {
-            # Must be a map (versus a set) to allow deletion by key
-            row[0]: True
-            for row in connection.execute(
-                f"select distinct directory from {TABLE_NAME}"
-            ).fetchall()
-        }
 
 
 def determine_filename(name: str, extension: str):
@@ -183,12 +176,6 @@ def determine_filename(name: str, extension: str):
 # TODO: break into smaller functions
 def index_files():
     start_time = time.time()
-
-    # Initialize with existing directories
-    # Delete directories which have files to index
-    # The remaining are directories which no longer should be indexed
-    # (and can be deleted from the database)
-    existing_directories_to_delete = get_existing_directories(database_pathname)
 
     # TODO: Allow specifying multiple locations via talon_list
     # (handle overlap of directories, such as if one is a subdirectory of another can be ignored)
@@ -236,18 +223,17 @@ def index_files():
         if not files:
             continue
 
-        if directory in existing_directories_to_delete:
-            del existing_directories_to_delete[directory]
-
         files.sort()
 
-        existing_rows = existing_files[directory]
-        existing_rows.sort(key=itemgetter("filename"))
+        if directory in existing_files:
+            existing_rows = existing_files.pop(directory)
+            existing_rows.sort(key=itemgetter("filename"))
+        else:
+            existing_rows = []
 
         existing_index = 0
         pathwalk_index = 0
 
-        # TODO: delete based on rowid
         while existing_index < len(existing_rows) or pathwalk_index < len(files):
             if existing_index >= len(existing_rows):
                 # "file" is a new file in the directory and should be INSERTED
@@ -260,7 +246,7 @@ def index_files():
             if pathwalk_index >= len(files):
                 # File in database is no longer in directory (and can be deleted in database)
                 record = existing_rows[existing_index]
-                rowid = str(record["rowid"])
+                rowid = record["rowid"]
                 if rowid in delete_records:
                     raise Exception("Duplicate rowid", record)
                 delete_records.add(rowid)
@@ -281,7 +267,7 @@ def index_files():
                 # For example "DEF" on pathwalk and "ABC" on database
                 # In this case, "ABC" is no longer in the directory (and can be delete in the database)
                 record = existing_rows[existing_index]
-                rowid = str(record["rowid"])
+                rowid = record["rowid"]
                 if rowid in delete_records:
                     raise Exception("Duplicate rowid", record)
                 delete_records.add(rowid)
@@ -300,13 +286,22 @@ def index_files():
                 )
 
                 if file_has_change:
-                    rowid = str(record["rowid"])
+                    rowid = record["rowid"]
                     if rowid in delete_records:
                         raise Exception("Duplicate rowid", record)
                     delete_records.add(rowid)
 
                     update_count += 1
                     insert_files.append(file_dictionary)
+
+    # Any files remaining in existing_files are for directories which no longer existing on the file system
+    # These records can be deleted
+    for records in existing_files.values():
+        for record in records:
+            rowid = record["rowid"]
+            if rowid in delete_records:
+                raise Exception("Duplicate rowid", record)
+            delete_records.add(rowid)
 
     # TODO: Also read file contents (depending on file types, use include list)
     # (that way can slowly add types and ignore binary like png)
@@ -337,13 +332,6 @@ def index_files():
             insert_files,
         )
 
-        # https://stackoverflow.com/a/16856730
-        # (need to convert into list of tuples of size 1)
-        delete_directories_cursor = connection.executemany(
-            f"delete from {TABLE_NAME} where directory = ?",
-            [(k,) for k in existing_directories_to_delete.keys()],
-        )
-
         connection.commit()
 
         logging.debug(f"FISHy Updated {update_count} files in database")
@@ -351,7 +339,7 @@ def index_files():
             f"FISHy Inserted {len(insert_files) - update_count} files from {str(root_path)}"
         )
         logging.debug(
-            f"FISHy Deleted {len(delete_records) - update_count + delete_directories_cursor.rowcount} records from database"
+            f"FISHy Deleted {len(delete_records) - update_count} records from database"
         )
 
     end_time = time.time()
