@@ -17,7 +17,3 @@ state <user.code_type> <user.text>:             insert('{code_type} {user.reform
 # Couldn't find way to insert "not" for negation
 op not:                                         insert('not ')
 type int:                                       insert('int')
-
-# TODO: delete once close https://github.com/talonhub/community/issues/1468
-state break:                                    "break"
-state (continue | next):                        "continue"
