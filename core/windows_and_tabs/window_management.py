@@ -3,7 +3,13 @@ import os
 import re
 from typing import Tuple
 
-from talon import Context, Module, actions, registry, ui
+from talon import (
+    Context,
+    Module,
+    actions,
+    registry,
+    ui,  # type: ignore
+)
 
 DROPBOX_PROGRAMS_DIRECTORY = "%UserProfile%/Dropbox/Programs"
 
@@ -19,7 +25,7 @@ ctx = Context()
 ctx.lists["user.open_apps"] = {
     "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
     "winmerge": f"{DROPBOX_PROGRAMS_DIRECTORY}/WinMergePortable/App/WinMerge/WinMergeU.exe",
-    "explore": f"{DROPBOX_PROGRAMS_DIRECTORY}/FreeCommanderPortable/App/FreeCommanderXE/FreeCommander.exe",
+    "explore": f"{DROPBOX_PROGRAMS_DIRECTORY}/FreeCommanderPortable/FreeCommanderPortable.exe",
     "keepass": f"{DROPBOX_PROGRAMS_DIRECTORY}/KeePass/KeePass.exe",
 }
 
