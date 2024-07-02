@@ -281,16 +281,6 @@ def index_files(database_pathname: str):
     # For example, could indicate method name, class name
     # Also indicate type of line (such as assignment, function definition, etc.)
 
-    # TODO: shows lots of files being added / deleted each run...why
-    # insert_files_by_directory = defaultdict(list[dict[str, Any]])
-    # for row_dict in insert_files:
-    #     insert_files_by_directory[row_dict["directory"]].append(row_dict)
-
-    # for item in insert_files_by_directory.items():
-    #     directory, files = item
-    #     if len(files) > 100:
-    #         print(f"{directory}: count {len(files)}")
-
     update_count = update_count_mutable[0]
     connection: Connection
     with sqlite3.connect(database_pathname) as connection:
@@ -338,6 +328,10 @@ def on_close():
         unlink_fishy_path.unlink()
 
 
+def determine_fishy_lock_path(database_pathname: str) -> Path:
+    return Path(database_pathname).with_name("FISHy.lck")
+
+
 def main():
     global unlink_fishy_path
 
@@ -345,16 +339,15 @@ def main():
         return
 
     database_pathname = sys.argv[1]
-    database_path = Path(database_pathname)
 
-    fishy_path = database_path.with_name("FISHy.lck")
-    if fishy_path.exists():
-        logging.error(f"Indexer is already running, see {fishy_path}")
-        return
-
+    fishy_lock_path = determine_fishy_lock_path(database_pathname)
     try:
-        with fishy_path.open("x") as file:
-            unlink_fishy_path = fishy_path
+        if fishy_lock_path.exists():
+            logging.error(f"Indexer is already running, see {fishy_lock_path}")
+            return
+
+        with fishy_lock_path.open("x") as file:
+            unlink_fishy_path = fishy_lock_path
 
             pid = os.getpid()
             file.write(str(pid))
@@ -366,7 +359,7 @@ def main():
     except Exception as e:
         print(f"An error occurred: {e}")
     # finally:
-    # input("Press enter to exit")
+    #     input("Press enter to exit")
 
 
 if __name__ == "__main__":

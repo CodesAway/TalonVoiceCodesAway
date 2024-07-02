@@ -1,4 +1,5 @@
 import os
+import os.path
 import sqlite3
 import subprocess
 import sys
@@ -10,9 +11,14 @@ from talon import (
     app,  # type: ignore
     cron,  # type: ignore
     imgui,  # type: ignore
+    ui,  # type: ignore
 )
 
-from .file_indexer_search_helper_background import TABLE_NAME, determine_filename
+from .file_indexer_search_helper_background import (
+    TABLE_NAME,
+    determine_filename,
+    determine_fishy_lock_path,
+)
 
 mod = Module()
 fishy_subprocess: subprocess.Popen = None
@@ -77,6 +83,34 @@ def fishy_gui_search_results(gui: imgui.GUI):
         actions.user.fishy_hide_search_results()
 
 
+def handle_stale_fishy_lock():
+    """Handles cases where lock file was left lingering due to issue (and deletes lock file if stale)"""
+    fishy_lock_path = determine_fishy_lock_path(database_pathname)
+
+    if not fishy_lock_path.exists():
+        return
+
+    # Check if PID lock is stale and can be deleted (then, can proceed with indexing)
+    with fishy_lock_path.open() as file:
+        check_pid = file.read()
+
+    fishy_python_running = [
+        application.name
+        for application in ui.apps()
+        # Match on PID
+        if str(application.pid) == check_pid
+        # Verify PID is Python process
+        and (
+            application.name.lower() == "python"
+            or os.path.basename(application.exe).lower() == "python.exe"
+        )
+    ]
+
+    if not fishy_python_running:
+        # PID is stale (since not Python)
+        fishy_lock_path.unlink()
+
+
 def index_files():
     global fishy_subprocess
 
@@ -85,8 +119,7 @@ def index_files():
         if fishy_subprocess_is_running:
             return
 
-    # TODO: check if PID exists and belongs to python.exe (if not, delete FISHy.lck)
-    # Handles cases where lock file was left lingering due to issue
+    handle_stale_fishy_lock()
 
     file_path = (
         Path(__file__).resolve().with_name("file_indexer_search_helper_background.py")
