@@ -1,3 +1,4 @@
+import logging
 import os
 import os.path
 import sqlite3
@@ -83,20 +84,28 @@ def fishy_gui_search_results(gui: imgui.GUI):
         actions.user.fishy_hide_search_results()
 
 
-def handle_stale_fishy_lock():
-    """Handles cases where lock file was left lingering due to issue (and deletes lock file if stale)"""
+def handle_stale_fishy_lock() -> bool:
+    """
+    Handles cases where lock file was left lingering due to issue (and deletes lock file if stale)
+
+    Returns:
+        * True if stale lock has been handled (meaning it's okay to start another process)
+        * False if the lock remains (meaning another process is still running and a new one should not be started)
+    """
     fishy_lock_path = determine_fishy_lock_path(database_pathname)
 
     if not fishy_lock_path.exists():
-        return
+        return True
 
     # Check if PID lock is stale and can be deleted (then, can proceed with indexing)
     with fishy_lock_path.open() as file:
         check_pid = file.read()
 
+    # Store in variable beforehand (to ensure ui.apps doesn't change while iterating)
+    ui_apps = ui.apps()
     fishy_python_running = [
         application.name
-        for application in ui.apps()
+        for application in ui_apps
         # Match on PID
         if str(application.pid) == check_pid
         # Verify PID is Python process
@@ -106,9 +115,13 @@ def handle_stale_fishy_lock():
         )
     ]
 
-    if not fishy_python_running:
+    if fishy_python_running:
+        return False
+    else:
         # PID is stale (since not Python)
+        logging.debug("FISHy deleted stale lock")
         fishy_lock_path.unlink()
+        return True
 
 
 def index_files():
@@ -117,9 +130,15 @@ def index_files():
     if fishy_subprocess:
         fishy_subprocess_is_running = fishy_subprocess.poll() is None
         if fishy_subprocess_is_running:
+            # Note: would only get this error if set cron interval too low and prior process didn't finish
+            logging.debug(
+                "FISHy subprocess is still running (try increasing cron interval)"
+            )
             return
 
-    handle_stale_fishy_lock()
+    if not handle_stale_fishy_lock():
+        logging.debug("FISHy lock remains (don't start another process)")
+        return
 
     file_path = (
         Path(__file__).resolve().with_name("file_indexer_search_helper_background.py")
@@ -127,6 +146,7 @@ def index_files():
     fishy_command = [sys.executable, file_path, database_pathname]
     # TODO: add error handling (in case script breaks)
     fishy_subprocess = subprocess.Popen(fishy_command, shell=True)
+    logging.debug(f"FISHy started background indexing with PID {fishy_subprocess.pid}")
 
 
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
@@ -157,7 +177,6 @@ def search(FULL_TEXT_SEARCH_TEXT):
             row_dict["filename"] = determine_filename(
                 row_dict["name"], row_dict["extension"]
             )
-            # logging.info(os.path.join(row_dict["directory"], row_dict["filename"]))
             search_results.append(row_dict)
 
         return search_results
@@ -182,8 +201,10 @@ def on_ready():
         actions.path.talon_user(), "file_indexer_search_helper.db"
     )
 
-    # TODO: use subprocess (such as system_command_nb)
-    # https://talonvoice.slack.com/archives/C7ENXA7C4/p1719603988033169
+    # TODO: add support for watching directories with recent changes
+    # (to allow a dynamic list of instant updates in addition to the 10 minute polling)
+    # Would also maintain a list of ignored recent directories (if get permission error)
+    # Could have background process write to csv (with directory and modified time)
 
     cron.after("0s", index_files)
 
