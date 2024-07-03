@@ -35,14 +35,17 @@ ignore_directory_parts = {
     "History",
     "Temp",
     "Backup",
+    "SquirrelTemp",
 }
 
 # TODO: move to file
 # TODO: support environment variables (via os.path.expandvars)
 ignore_directories = {
+    r"c:\$Recycle.Bin",
     r"C:\Users\cross\AppData\Local\PowerToys",
     r"C:\Windows\WinSxS\Manifests",
     r"C:\Program Files (x86)\Steam\steamapps\common",
+    r"C:\Windows",
 }
 
 # Use map for better performance
@@ -154,9 +157,13 @@ def index_directory_files(
     while existing_index < len(existing_rows) or pathwalk_index < len(files):
         if existing_index >= len(existing_rows):
             # "file" is a new file in the directory and should be INSERTED
-            insert_files.append(
-                create_file_dictionary(directory, files[pathwalk_index])
-            )
+            try:
+                insert_files.append(
+                    create_file_dictionary(directory, files[pathwalk_index])
+                )
+            except OSError as e:
+                print(f"An error occurred: {e}")
+
             pathwalk_index += 1
             continue
 
@@ -176,9 +183,12 @@ def index_directory_files(
         pathwalk_filename = files[pathwalk_index]
 
         if existing_filename > pathwalk_filename:
-            insert_files.append(
-                create_file_dictionary(directory, files[pathwalk_index])
-            )
+            try:
+                insert_files.append(
+                    create_file_dictionary(directory, files[pathwalk_index])
+                )
+            except OSError as e:
+                print(f"An error occurred: {e}")
             pathwalk_index += 1
         elif pathwalk_filename > existing_filename:
             # For example "DEF" on pathwalk and "ABC" on database
