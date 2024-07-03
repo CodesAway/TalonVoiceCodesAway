@@ -39,19 +39,18 @@ ignore_directory_parts = {
 }
 
 # TODO: move to file
-# TODO: support environment variables (via os.path.expandvars)
 ignore_directories = {
     r"c:\$Recycle.Bin",
-    r"C:\Users\cross\AppData\Local\PowerToys",
-    r"C:\Windows\WinSxS\Manifests",
+    r"%LocalAppData%\PowerToys",
     r"C:\Program Files (x86)\Steam\steamapps\common",
     r"C:\Windows",
+    # r"C:\Windows\WinSxS\Manifests",
 }
 
 # Use map for better performance
 ignore_directory_parts_map = {e.lower() for e in ignore_directory_parts}
 
-ignore_directories_map = {e.lower() for e in ignore_directories}
+ignore_directories_map = {os.path.expandvars(e).lower() for e in ignore_directories}
 
 # Constant for table name inside SQLite database
 TABLE_NAME = "file"
@@ -345,7 +344,10 @@ def determine_fishy_lock_path(database_pathname: str) -> Path:
 def main():
     global unlink_fishy_path
 
+    logging.getLogger().setLevel(logging.DEBUG)
+
     if len(sys.argv) != 2:
+        logging.debug("Pass DB pathname as parameter")
         return
 
     database_pathname = sys.argv[1]
@@ -362,7 +364,6 @@ def main():
             pid = os.getpid()
             file.write(str(pid))
 
-        logging.getLogger().setLevel(logging.DEBUG)
         print("Database pathname:", database_pathname)
         create_database(database_pathname)
         index_files(database_pathname)
