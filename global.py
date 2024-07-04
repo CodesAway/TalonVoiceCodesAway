@@ -1,6 +1,6 @@
 import subprocess
 
-from talon import Context, Module
+from talon import Context, Module, actions, app
 
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
@@ -18,6 +18,13 @@ ctx.lists["user.codesaway_symbol_key"] = {
 @ctx.capture("user.symbol_key", rule="{user.symbol_key} | {user.codesaway_symbol_key}")
 def symbol_key(m):
     return str(m)
+
+
+def on_ready():
+    actions.sound.set_microphone("System Default")
+
+
+app.register("ready", on_ready)
 
 
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/operating_system/operating_system.py
