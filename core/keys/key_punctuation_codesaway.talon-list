@@ -1,0 +1,9 @@
+list: user.key_punctuation_codesaway
+-
+
+dot:                        .
+comma:                      ,
+colon:                      :
+slash:                      /
+question mark:              ?
+exclamation mark:           !
