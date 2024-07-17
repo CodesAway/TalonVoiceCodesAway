@@ -11,4 +11,7 @@ fisher submit:
     user.draft_hide()
     user.fisher_search(search_text)
 
+# TODO: support optionally specifying a program to open the file
+# (such as if want to open Python files using vscode)
+# Could also add FISHer specific defaults, so always opens in VSCode, even though system will open in Python executable
 fisher <number_small>:                          user.fisher_open_search_result(number_small)

@@ -10,3 +10,4 @@ settings():
     # user.mouse_enable_hiss_scroll = true
     # Try longer timeout (default 0.3, so I have more time to pause and think)
     speech.timeout = 0.4
+    imgui.dark_mode = true
