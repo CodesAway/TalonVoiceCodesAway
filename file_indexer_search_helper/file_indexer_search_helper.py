@@ -1,6 +1,7 @@
 import logging
 import os
 import os.path
+import platform
 import sqlite3
 import subprocess
 import sys
@@ -26,6 +27,7 @@ mod = Module()
 fisher_subprocess: subprocess.Popen = None
 fisher_search_text = ""
 fisher_draft_search_text = ""
+fisher_search_results: list[dict[str, str]] = None
 
 # Runtime priorities of file extension
 # (can be changed on-the-fly without reindex, since passed into SQL query)
@@ -71,10 +73,14 @@ limit 25
 
 @imgui.open()
 def fisher_gui_search_results(gui: imgui.GUI):
+    global fisher_search_results
     gui.text("Search Results for")
     gui.text(fisher_search_text.replace("\n", " "))
     gui.line()
+
     search_results = search(fisher_search_text)
+    fisher_search_results = search_results
+
     for i, search_result in enumerate(search_results):
         directory = search_result["directory"]
         filename = search_result["filename"]
@@ -158,7 +164,7 @@ def index_files():
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
 # Enable paging (like done for help)
 # This may help make results easier to read
-def search(FULL_TEXT_SEARCH_TEXT):
+def search(FULL_TEXT_SEARCH_TEXT) -> list[dict[str, str]]:
     # Note: -e.priority desc will sort NULL / no priority last (since descending)
     # Negative ensures that, for example, priority 0 comes before priority 1
     # (since 0 > -1, so when sorting descending will be earlier)
@@ -233,7 +239,7 @@ class Actions:
         if fisher_search_text:
             fisher_gui_search_results.show()
         else:
-            actions.user.fisher_draft(".she")
+            actions.user.fisher_draft("")
 
     def fisher_toggle_search_results():
         """Toggles the GUI for fisher search results"""
@@ -254,3 +260,28 @@ class Actions:
         global fisher_search_text
         fisher_search_text = search_text
         actions.user.fisher_show_search_results()
+
+    def fisher_open_search_result(index: int):
+        """Opens the search results file at the specified index"""
+        if not fisher_search_results:
+            logging.debug("FISHer has no search results")
+            return
+
+        # Subtract 1 to convert from 1-based to 0-based index
+        fisher_search_result = fisher_search_results[index - 1]
+        pathname = os.path.join(
+            fisher_search_result["directory"], fisher_search_result["filename"]
+        )
+        actions.user.open_file(pathname)
+
+    def open_file(pathname: str):
+        """Opens the file using the default program"""
+        # https://stackoverflow.com/a/435669
+        # https://github.com/chaosparrot/talon_hud/blob/908ec641514075326fe2c51db329607ae0b2115c/content/speech_poller.py#L88-L93
+
+        if platform.system() == "Darwin":  # macOS
+            subprocess.call(("open", pathname))
+        elif platform.system() == "Windows":  # Windows
+            os.startfile(pathname)
+        else:  # linux variants
+            subprocess.call(("xdg-open", pathname))

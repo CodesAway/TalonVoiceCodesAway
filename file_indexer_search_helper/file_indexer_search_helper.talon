@@ -10,3 +10,5 @@ fisher submit:
     # TODO: how to replace text with original text (to restore to prior text)
     user.draft_hide()
     user.fisher_search(search_text)
+
+fisher <number_small>:                          user.fisher_open_search_result(number_small)
