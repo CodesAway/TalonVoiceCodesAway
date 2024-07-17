@@ -76,7 +76,7 @@ def create_database(database_pathname):
         connection.execute(CREATE_VIRTUAL_TABLE)
         connection.commit()
         logging.debug(
-            f"FISHy Existing: {connection.execute(SELECT_COUNT).fetchone()[0]}"
+            f"FISHer Existing: {connection.execute(SELECT_COUNT).fetchone()[0]}"
         )
 
         # https://www.techonthenet.com/sqlite/auto_vacuum.php
@@ -241,7 +241,7 @@ def index_files(database_pathname: str):
     # https://stackoverflow.com/a/1731989
     existing_files = query_existing_files(database_pathname)
 
-    logging.debug(f"FISHy walk: {root_path}")
+    logging.debug(f"FISHer walk: {root_path}")
 
     # TODO: replace path.walk with os.walk
     # (since Talon is currently on Python 3.11 and path.walk was added in 3.12)
@@ -313,36 +313,36 @@ def index_files(database_pathname: str):
 
         connection.commit()
 
-        logging.debug(f"FISHy Updated {update_count} files in database")
+        logging.debug(f"FISHer Updated {update_count} files in database")
         logging.debug(
-            f"FISHy Inserted {len(insert_files) - update_count} files from {str(root_path)}"
+            f"FISHer Inserted {len(insert_files) - update_count} files from {str(root_path)}"
         )
         logging.debug(
-            f"FISHy Deleted {len(delete_records) - update_count} records from database"
+            f"FISHer Deleted {len(delete_records) - update_count} records from database"
         )
 
     end_time = time.time()
 
     # get the execution time
     elapsed_time = end_time - start_time
-    logging.debug(f"FISHy Execution time: {elapsed_time} seconds")
+    logging.debug(f"FISHer Execution time: {elapsed_time} seconds")
 
 
-unlink_fishy_path: Path = None
+unlink_fisher_path: Path = None
 
 
 @atexit.register
 def on_close():
-    if unlink_fishy_path:
-        unlink_fishy_path.unlink()
+    if unlink_fisher_path:
+        unlink_fisher_path.unlink()
 
 
-def determine_fishy_lock_path(database_pathname: str) -> Path:
-    return Path(database_pathname).with_name("FISHy.lck")
+def determine_fisher_lock_path(database_pathname: str) -> Path:
+    return Path(database_pathname).with_name("FISHer.lck")
 
 
 def main():
-    global unlink_fishy_path
+    global unlink_fisher_path
 
     logging.getLogger().setLevel(logging.DEBUG)
 
@@ -352,14 +352,14 @@ def main():
 
     database_pathname = sys.argv[1]
 
-    fishy_lock_path = determine_fishy_lock_path(database_pathname)
+    fisher_lock_path = determine_fisher_lock_path(database_pathname)
     try:
-        if fishy_lock_path.exists():
-            logging.error(f"Indexer is already running, see {fishy_lock_path}")
+        if fisher_lock_path.exists():
+            logging.error(f"Indexer is already running, see {fisher_lock_path}")
             return
 
-        with fishy_lock_path.open("x") as file:
-            unlink_fishy_path = fishy_lock_path
+        with fisher_lock_path.open("x") as file:
+            unlink_fisher_path = fisher_lock_path
 
             pid = os.getpid()
             file.write(str(pid))

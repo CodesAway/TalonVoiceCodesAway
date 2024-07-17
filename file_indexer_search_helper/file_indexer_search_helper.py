@@ -18,14 +18,14 @@ from talon import (
 from .file_indexer_search_helper_background import (
     TABLE_NAME,
     determine_filename,
-    determine_fishy_lock_path,
+    determine_fisher_lock_path,
 )
 
 mod = Module()
 
-fishy_subprocess: subprocess.Popen = None
-fishy_search_text = ""
-fishy_draft_search_text = ""
+fisher_subprocess: subprocess.Popen = None
+fisher_search_text = ""
+fisher_draft_search_text = ""
 
 # Runtime priorities of file extension
 # (can be changed on-the-fly without reindex, since passed into SQL query)
@@ -70,11 +70,11 @@ limit 25
 
 
 @imgui.open()
-def fishy_gui_search_results(gui: imgui.GUI):
+def fisher_gui_search_results(gui: imgui.GUI):
     gui.text("Search Results for")
-    gui.text(fishy_search_text.replace("\n", " "))
+    gui.text(fisher_search_text.replace("\n", " "))
     gui.line()
-    search_results = search(fishy_search_text)
+    search_results = search(fisher_search_text)
     for i, search_result in enumerate(search_results):
         directory = search_result["directory"]
         filename = search_result["filename"]
@@ -84,11 +84,11 @@ def fishy_gui_search_results(gui: imgui.GUI):
 
         gui.spacer()
 
-    if gui.button("Fishy"):
-        actions.user.fishy_hide_search_results()
+    if gui.button("Fisher"):
+        actions.user.fisher_hide_search_results()
 
 
-def handle_stale_fishy_lock() -> bool:
+def handle_stale_fisher_lock() -> bool:
     """
     Handles cases where lock file was left lingering due to issue (and deletes lock file if stale)
 
@@ -96,18 +96,18 @@ def handle_stale_fishy_lock() -> bool:
         * True if stale lock has been handled (meaning it's okay to start another process)
         * False if the lock remains (meaning another process is still running and a new one should not be started)
     """
-    fishy_lock_path = determine_fishy_lock_path(database_pathname)
+    fisher_lock_path = determine_fisher_lock_path(database_pathname)
 
-    if not fishy_lock_path.exists():
+    if not fisher_lock_path.exists():
         return True
 
     # Check if PID lock is stale and can be deleted (then, can proceed with indexing)
-    with fishy_lock_path.open() as file:
+    with fisher_lock_path.open() as file:
         check_pid = file.read()
 
     # Store in variable beforehand (to ensure ui.apps doesn't change while iterating)
     ui_apps = ui.apps()
-    fishy_python_running = [
+    fisher_python_running = [
         application.name
         for application in ui_apps
         # Match on PID
@@ -119,38 +119,40 @@ def handle_stale_fishy_lock() -> bool:
         )
     ]
 
-    if fishy_python_running:
+    if fisher_python_running:
         return False
     else:
         # PID is stale (since not Python)
-        logging.debug("FISHy deleted stale lock")
-        fishy_lock_path.unlink()
+        logging.debug("FISHer deleted stale lock")
+        fisher_lock_path.unlink()
         return True
 
 
 def index_files():
-    global fishy_subprocess
+    global fisher_subprocess
 
-    if fishy_subprocess:
-        fishy_subprocess_is_running = fishy_subprocess.poll() is None
-        if fishy_subprocess_is_running:
+    if fisher_subprocess:
+        fisher_subprocess_is_running = fisher_subprocess.poll() is None
+        if fisher_subprocess_is_running:
             # Note: would only get this error if set cron interval too low and prior process didn't finish
             logging.debug(
-                "FISHy subprocess is still running (try increasing cron interval)"
+                "FISHer subprocess is still running (try increasing cron interval)"
             )
             return
 
-    if not handle_stale_fishy_lock():
-        logging.debug("FISHy lock remains (don't start another process)")
+    if not handle_stale_fisher_lock():
+        logging.debug("FISHer lock remains (don't start another process)")
         return
 
     file_path = (
         Path(__file__).resolve().with_name("file_indexer_search_helper_background.py")
     )
-    fishy_command = [sys.executable, file_path, database_pathname]
+    fisher_command = [sys.executable, file_path, database_pathname]
     # TODO: add error handling (in case script breaks)
-    fishy_subprocess = subprocess.Popen(fishy_command, shell=True)
-    logging.debug(f"FISHy started background indexing with PID {fishy_subprocess.pid}")
+    fisher_subprocess = subprocess.Popen(fisher_command, shell=True)
+    logging.debug(
+        f"FISHer started background indexing with PID {fisher_subprocess.pid}"
+    )
 
 
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
@@ -222,33 +224,33 @@ app.register("ready", on_ready)
 
 @mod.action_class
 class Actions:
-    def fishy_hide_search_results():
-        """Hides the GUI for fishy search results"""
-        fishy_gui_search_results.hide()
+    def fisher_hide_search_results():
+        """Hides the GUI for fisher search results"""
+        fisher_gui_search_results.hide()
 
-    def fishy_show_search_results():
-        """Shows the GUI for fishy search results"""
-        if fishy_search_text:
-            fishy_gui_search_results.show()
+    def fisher_show_search_results():
+        """Shows the GUI for fisher search results"""
+        if fisher_search_text:
+            fisher_gui_search_results.show()
         else:
-            actions.user.fishy_draft(".she")
+            actions.user.fisher_draft(".she")
 
-    def fishy_toggle_search_results():
-        """Toggles the GUI for fishy search results"""
-        if fishy_gui_search_results.showing:
-            actions.user.fishy_hide_search_results()
+    def fisher_toggle_search_results():
+        """Toggles the GUI for fisher search results"""
+        if fisher_gui_search_results.showing:
+            actions.user.fisher_hide_search_results()
         else:
-            actions.user.fishy_show_search_results()
+            actions.user.fisher_show_search_results()
 
-    def fishy_draft(search_text: str):
-        """Opens draft editor populating with initial search_text (or global fishy_search_text if blank)"""
+    def fisher_draft(search_text: str):
+        """Opens draft editor populating with initial search_text (or global fisher_search_text if blank)"""
         actions.user.draft_hide()
         actions.user.draft_show(
-            search_text or fishy_draft_search_text or fishy_search_text
+            search_text or fisher_draft_search_text or fisher_search_text
         )
 
-    def fishy_search(search_text: str):
+    def fisher_search(search_text: str):
         """Search for the specified text"""
-        global fishy_search_text
-        fishy_search_text = search_text
-        actions.user.fishy_show_search_results()
+        global fisher_search_text
+        fisher_search_text = search_text
+        actions.user.fisher_show_search_results()
