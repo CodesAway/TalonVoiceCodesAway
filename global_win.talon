@@ -1,11 +1,18 @@
 os: windows
 -
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/operating_system/operating_system.talon
-^system shutdown$:                              user.exec("shutdown /s")
-^system restart$:                               user.exec("shutdown /r")
+^system shutdown please$:                       user.exec("shutdown /s")
+^system restart please$:                        user.exec("shutdown /r")
 ^system lock$:
     user.sleep_all()
     user.exec("Rundll32.exe user32.dll,LockWorkStation")
+
+# None is always microphone #1
+# (allows turning off mic when watching video to prevent accidental wake up)
+# (can click mic icon in Talon HUD to set back to System Default)
+mic none please:                                user.microphone_select(1)
+# System Default is always microphone #2
+mic default:                                    user.microphone_select(2)
 
 # Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
 # (has other edit commands)
