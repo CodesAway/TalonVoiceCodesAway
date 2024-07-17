@@ -285,3 +285,7 @@ class Actions:
             os.startfile(pathname)
         else:  # linux variants
             subprocess.call(("xdg-open", pathname))
+
+    def fisher_index_files():
+        """Index files (ad-hoc)"""
+        index_files()
