@@ -22,7 +22,10 @@ from .file_indexer_search_helper_background import (
 )
 
 mod = Module()
+
 fishy_subprocess: subprocess.Popen = None
+fishy_search_text = ""
+fishy_draft_search_text = ""
 
 # Runtime priorities of file extension
 # (can be changed on-the-fly without reindex, since passed into SQL query)
@@ -68,9 +71,10 @@ limit 25
 
 @imgui.open()
 def fishy_gui_search_results(gui: imgui.GUI):
-    gui.text("Search Results")
+    gui.text("Search Results for")
+    gui.text(fishy_search_text.replace("\n", " "))
     gui.line()
-    search_results = search("freecom*")
+    search_results = search(fishy_search_text)
     for i, search_result in enumerate(search_results):
         directory = search_result["directory"]
         filename = search_result["filename"]
@@ -224,7 +228,10 @@ class Actions:
 
     def fishy_show_search_results():
         """Shows the GUI for fishy search results"""
-        fishy_gui_search_results.show()
+        if fishy_search_text:
+            fishy_gui_search_results.show()
+        else:
+            actions.user.fishy_draft(".she")
 
     def fishy_toggle_search_results():
         """Toggles the GUI for fishy search results"""
@@ -232,3 +239,16 @@ class Actions:
             actions.user.fishy_hide_search_results()
         else:
             actions.user.fishy_show_search_results()
+
+    def fishy_draft(search_text: str):
+        """Opens draft editor populating with initial search_text (or global fishy_search_text if blank)"""
+        actions.user.draft_hide()
+        actions.user.draft_show(
+            search_text or fishy_draft_search_text or fishy_search_text
+        )
+
+    def fishy_search(search_text: str):
+        """Search for the specified text"""
+        global fishy_search_text
+        fishy_search_text = search_text
+        actions.user.fishy_show_search_results()
