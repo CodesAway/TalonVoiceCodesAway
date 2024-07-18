@@ -261,18 +261,17 @@ class Actions:
         fisher_search_text = search_text
         actions.user.fisher_show_search_results()
 
-    def fisher_open_search_result(index: int):
-        """Opens the search results file at the specified index"""
+    def fisher_get_search_result_pathname(index: int) -> str:
+        """Gets the search results pathname at the specified index"""
         if not fisher_search_results:
             logging.debug("FISHer has no search results")
-            return
+            return None
 
         # Subtract 1 to convert from 1-based to 0-based index
         fisher_search_result = fisher_search_results[index - 1]
-        pathname = os.path.join(
+        return os.path.join(
             fisher_search_result["directory"], fisher_search_result["filename"]
         )
-        actions.user.open_file(pathname)
 
     def open_file(pathname: str):
         """Opens the file using the default program"""

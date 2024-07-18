@@ -14,6 +14,12 @@ fisher submit:
 # TODO: support optionally specifying a program to open the file
 # (such as if want to open Python files using vscode)
 # Could also add FISHer specific defaults, so always opens in VSCode, even though system will open in Python executable
-fisher <number_small>:                          user.fisher_open_search_result(number_small)
+fisher <number_small>:
+    pathname = user.fisher_get_search_result_pathname(number_small)
+    user.open_file(pathname)
+
+fisher clip <number_small>:
+    pathname = user.fisher_get_search_result_pathname(number_small)
+    clip.set_text(pathname)
 
 fisher index:                                   user.fisher_index_files()
