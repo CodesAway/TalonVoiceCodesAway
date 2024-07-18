@@ -23,6 +23,10 @@ from .file_indexer_search_helper_background import (
 )
 
 mod = Module()
+mod.list(
+    "fisher_program",
+    "Program name and pathname to open files using FISHer",
+)
 
 fisher_subprocess: subprocess.Popen = None
 fisher_search_text = ""
@@ -284,6 +288,11 @@ class Actions:
             os.startfile(pathname)
         else:  # linux variants
             subprocess.call(("xdg-open", pathname))
+
+    def open_file_in_program(pathname: str, program_pathname: str):
+        """Opens the file using the specified program"""
+        command = [program_pathname, pathname]
+        actions.user.exec(command)
 
     def fisher_index_files():
         """Index files (ad-hoc)"""

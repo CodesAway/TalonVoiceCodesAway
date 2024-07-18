@@ -18,8 +18,12 @@ fisher <number_small>:
     pathname = user.fisher_get_search_result_pathname(number_small)
     user.open_file(pathname)
 
-fisher clip <number_small>:
+fisher copy <number_small>:
     pathname = user.fisher_get_search_result_pathname(number_small)
     clip.set_text(pathname)
 
 fisher index:                                   user.fisher_index_files()
+
+fisher <number_small> {user.fisher_program}:
+    pathname = user.fisher_get_search_result_pathname(number_small)
+    user.open_file_in_program(pathname, fisher_program)
