@@ -1,4 +1,4 @@
 list: user.fisher_program
 -
-code: c:\Users\cross\AppData\Local\Programs\Microsoft VS Code\Code.exe
-inkscape: c:\Users\cross\Dropbox\Programs\InkscapePortable\InkscapePortable.exe
+code: %LocalAppData%\Programs\Microsoft VS Code\Code.exe
+inkscape: %Dropbox%\Programs\InkscapePortable\InkscapePortable.exe

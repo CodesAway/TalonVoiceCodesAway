@@ -1,4 +1,11 @@
 ^fisher$:                                       user.fisher_toggle_search_results()
+
+fisher clip:
+    search_text = clip.text()
+    user.fisher_search(search_text)
+
+# CodesAway* svg voice*
+
 fisher hunt <user.text_codesaway>:              user.fisher_draft(text_codesaway)
 
 fisher show:                                    user.fisher_draft("")
