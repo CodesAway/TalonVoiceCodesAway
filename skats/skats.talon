@@ -7,6 +7,10 @@ stack <user.ordinals> delete:                   user.delete_skats_stack_index(or
 # Workaround since cannot seem to say "zeroth" so it will recognize me
 stack top delete:                               user.delete_skats_stack_index(0)
 
+stack clip:
+    value = clip.text()
+    user.push_skats_stack(value)
+
 # Insert at cursor cursor position - "pop to this" would replace current
 pop here:
     value = user.pop_skats_stack()
