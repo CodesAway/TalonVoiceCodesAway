@@ -89,12 +89,12 @@ def fisher_gui_search_results(gui: imgui.GUI):
         directory = search_result["directory"]
         filename = search_result["filename"]
 
-        gui.text(f"{i+1:02d}: {directory}")
-        gui.text(f"{filename}")
+        gui.text(f"{i+1:<5d}{directory}")
+        gui.text(filename)
 
-        gui.spacer()
+        gui.line()
 
-    if gui.button("Fisher"):
+    if gui.button("FISHer"):
         actions.user.fisher_hide_search_results()
 
 
