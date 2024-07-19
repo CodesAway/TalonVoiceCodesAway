@@ -3,10 +3,16 @@ import re
 from io import StringIO
 from pathlib import Path
 
-from talon import Context, Module, actions, clip, settings, storage
+from talon import (
+    Context,
+    Module,
+    actions,
+    clip,  # type: ignore
+    imgui,  # type: ignore
+    settings,
+    storage,
+)
 
-# TODO: replace with standard imgui (or use try block to allow either)
-from ...andreas_talon.core.imgui import GUI, ImGUI
 from ...community.core.snippets.snippet_types import Snippet
 
 mod = Module()
@@ -22,21 +28,19 @@ ctx.lists["user.namer_variable"] = namer_variables_keys
 transformations = {}
 
 
-@ImGUI.open(numbered=True)
-def namer_gui_variables(gui: GUI):
-    gui.header("Variables")
+@imgui.open()
+def namer_gui_variables(gui: imgui.GUI):
+    gui.text("Variables")
     gui.line()
 
     for i, item in enumerate(namer_variables.items()):
         variable = item[0]
         value = item[1]
-        if gui.text(f"{variable}:\n{value}", clickable=True):
-            # TODO: What should clicking on the variable do?
-            # Is this even needed?
-            logging.debug("clicked_num = ", i + 1)
-            actions.user.namer_hide_variables()
-
-    gui.spacer()
+        # TODO: Reference https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/imgui.py
+        # Handle multi-line and long text
+        gui.text(f"{variable}:")
+        gui.text(value)
+        gui.line()
 
     if gui.button("Namer"):
         actions.user.namer_hide_variables()

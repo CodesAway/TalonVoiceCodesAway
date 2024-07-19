@@ -2,10 +2,12 @@ import json
 import logging
 from collections import deque
 
-from talon import Module, actions, storage
-
-# TODO: replace with standard imgui (or use try block to allow either)
-from ...andreas_talon.core.imgui import GUI, ImGUI
+from talon import (
+    Module,
+    actions,
+    imgui,  # type: ignore
+    storage,
+)
 
 mod = Module()
 
@@ -23,20 +25,15 @@ class DequeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-@ImGUI.open(numbered=True)
-def gui_skats_stack(gui: GUI):
-    gui.header("Stack")
+@imgui.open()
+def gui_skats_stack(gui: imgui.GUI):
+    gui.text("Stack")
     gui.line()
 
     for i, value in enumerate(skats_stack):
-        # Show top without number (since number 1 is second element in deque)
-        # TODO: What should clicking on the variable do?
-        # Is this even needed?
-        if i == 0:
-            if gui.header(f"  0   {value}", clickable=True):
-                logging.debug(f"clicked_num = {i + 1}")
-        elif gui.text(f"{value}", clickable=True):
-            logging.debug(f"clicked_num = {i + 1}")
+        # TODO: Reference https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/imgui.py
+        # Handle multi-line and long text
+        gui.text(f"{i:2d}   {value}")
 
     gui.spacer()
 
