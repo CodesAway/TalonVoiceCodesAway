@@ -110,7 +110,7 @@ def format_datetime(seconds: float) -> str:
         now = datetime.datetime.now().timestamp()
         diff = now - seconds
         if diff < 60:
-            return "less than 1 minute ago"
+            return "seconds ago"
 
         return f"{humanfriendly.format_timespan(now - seconds, max_units = 1)} ago"
 
