@@ -24,6 +24,19 @@ from .file_indexer_search_helper_background import (
     determine_fisher_lock_path,
 )
 
+has_humanfriendly = False
+
+try:
+    import humanfriendly
+
+    has_humanfriendly = True
+except ModuleNotFoundError:
+    # Error handling
+    logging.warn(
+        "Dependency humanfriendly isn't available (using default date / time format)"
+    )
+
+
 mod = Module()
 mod.list(
     "fisher_program",
@@ -93,6 +106,14 @@ def format_size(size: int) -> str:
 
 
 def format_datetime(seconds: float) -> str:
+    if has_humanfriendly:
+        now = datetime.datetime.now().timestamp()
+        diff = now - seconds
+        if diff < 60:
+            return "less than 1 minute ago"
+
+        return f"{humanfriendly.format_timespan(now - seconds, max_units = 1)} ago"
+
     return datetime.datetime.fromtimestamp(seconds).strftime("%Y-%m-%d %H:%M:%S")
 
 
