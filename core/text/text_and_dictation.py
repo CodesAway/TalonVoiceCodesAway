@@ -29,4 +29,6 @@ text_rule = f"({'|'.join(text_rule_parts)})+"
 @mod.capture(rule=text_rule)
 def text_codesaway(m) -> str:
     """Mixed words, numbers and punctuation, including user-defined vocabulary, abbreviations and spelling."""
+    # TODO: how to handle writing code such as "code action dot mimic" which want to result in action.mimic
+    # Currently, adds space after '.' which is logical for text, but not code (how to override?)
     return format_phrase(m)

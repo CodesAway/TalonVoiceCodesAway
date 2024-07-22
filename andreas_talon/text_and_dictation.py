@@ -11,22 +11,8 @@ ctx.matches = r"""
 tag: user.enable_andreas_talon
 """
 
-# ----- Captures used in both command and dictation mode -----
 
-
-text_rule_parts = [
-    "{user.vocabulary}",
-    # "{user.key_punctuation}", # Commented out (for now at least)
-    "<user.abbreviation>",
-    "<user.spell>",
-    "<user.number_prefix>",
-    "<phrase>",
-]
-
-text_rule = f"({'|'.join(text_rule_parts)})+"
-
-
-@ctx.capture("user.text", rule=text_rule)
+@ctx.capture("user.text", rule="<user.text_codesaway>")
 def text(m) -> str:
     """Mixed words, numbers and punctuation, including user-defined vocabulary, abbreviations and spelling."""
     return format_phrase(m)
