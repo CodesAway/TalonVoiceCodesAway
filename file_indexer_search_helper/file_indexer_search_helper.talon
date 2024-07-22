@@ -4,8 +4,6 @@ fisher clip:
     search_text = clip.text()
     user.fisher_search(search_text)
 
-# CodesAway* svg voice*
-
 fisher hunt <user.text_codesaway>:              user.fisher_draft(text_codesaway)
 
 fisher show:                                    user.fisher_draft("")
@@ -23,7 +21,7 @@ fisher submit:
 # Could also add FISHer specific defaults, so always opens in VSCode, even though system will open in Python executable
 fisher <number_small>:
     pathname = user.fisher_get_search_result_pathname(number_small)
-    user.open_file(pathname)
+    user.fisher_open_file(pathname)
 
 fisher copy <number_small>:
     pathname = user.fisher_get_search_result_pathname(number_small)
@@ -33,4 +31,4 @@ fisher index:                                   user.fisher_index_files()
 
 fisher <number_small> {user.fisher_program}:
     pathname = user.fisher_get_search_result_pathname(number_small)
-    user.open_file_in_program(pathname, fisher_program)
+    user.fisher_open_file(pathname, fisher_program)

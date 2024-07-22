@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import os.path
@@ -13,6 +14,7 @@ from talon import (
     app,  # type: ignore
     cron,  # type: ignore
     imgui,  # type: ignore
+    registry,
     ui,  # type: ignore
 )
 
@@ -26,6 +28,10 @@ mod = Module()
 mod.list(
     "fisher_program",
     "Program name and pathname to open files using FISHer",
+)
+mod.list(
+    "fisher_file_extension",
+    "Map from file extension to user.fisher_programs key",
 )
 
 fisher_subprocess: subprocess.Popen = None
@@ -74,6 +80,21 @@ limit 25
 # FROM {TABLE_NAME}('python OR java');
 # """
 
+SIZE_PREFIXES = ["", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
+
+
+def format_size(size: int) -> str:
+    index = 0
+    while size >= 1000 and index + 1 < len(SIZE_PREFIXES):
+        size /= 1000
+        index += 1
+
+    return f"{round(size, 2)} {SIZE_PREFIXES[index]}B"
+
+
+def format_datetime(seconds: float) -> str:
+    return datetime.datetime.fromtimestamp(seconds).strftime("%Y-%m-%d %H:%M:%S")
+
 
 @imgui.open()
 def fisher_gui_search_results(gui: imgui.GUI):
@@ -90,7 +111,16 @@ def fisher_gui_search_results(gui: imgui.GUI):
         filename = search_result["filename"]
 
         gui.text(f"{i+1:<5d}{directory}")
-        gui.text(filename)
+        # TODO: include size, relative date in parentheses
+        # Use decimal bytes (multiples of 1000) which matches what's done in everything but Windows
+        # Give option to use decimal bytes instead
+        # For kilobyte, use lowercase 'k', which is the standard metric abbreviation
+        # This matches what's done in the Google Files app
+        # humanreadable library is available as dependency in beta, but not regular version
+        # Write my own, but reference
+        size = search_result["size"]
+        modified_time = search_result["modified_time"]
+        gui.text(f"{filename} ({format_size(size)}, {format_datetime(modified_time)})")
 
         gui.line()
 
@@ -277,10 +307,8 @@ class Actions:
             fisher_search_result["directory"], fisher_search_result["filename"]
         )
 
-    def open_file(pathname: str):
-        """Opens the file using the default program"""
-        # https://stackoverflow.com/a/435669
-        # https://github.com/chaosparrot/talon_hud/blob/908ec641514075326fe2c51db329607ae0b2115c/content/speech_poller.py#L88-L93
+    def open_file_default_program(pathname: str):
+        """Open file in default program"""
 
         if platform.system() == "Darwin":  # macOS
             subprocess.call(("open", pathname))
@@ -289,10 +317,44 @@ class Actions:
         else:  # linux variants
             subprocess.call(("xdg-open", pathname))
 
-    def open_file_in_program(pathname: str, program_pathname: str):
-        """Opens the file using the specified program"""
-        command = [program_pathname, pathname]
-        actions.user.exec(command)
+    def fisher_open_file(pathname: str, program_pathname: str = ""):
+        """Opens the file"""
+        # https://stackoverflow.com/a/435669
+        # https://github.com/chaosparrot/talon_hud/blob/908ec641514075326fe2c51db329607ae0b2115c/content/speech_poller.py#L88-L93
+        print(f"program_pathname: {program_pathname}")
+
+        if program_pathname == "default":
+            actions.user.open_file_default_program(pathname)
+            return
+
+        if program_pathname:
+            command = [program_pathname, pathname]
+            actions.user.exec(command)
+            return
+
+        extension = os.path.splitext(pathname)[1]
+        if extension:
+            # Check if should open this in specific program
+            fisher_program = registry.lists["user.fisher_file_extension"][0].get(
+                extension[1:]
+            )
+            if fisher_program:
+                print(f"fisher_program: {fisher_program}")
+                program_pathname = registry.lists["user.fisher_program"][0].get(
+                    fisher_program
+                )
+                if not program_pathname:
+                    logging.error(
+                        f"Could not find program named '{fisher_program}' in user.fisher_programs"
+                    )
+                    return
+
+                print(f"program_pathname: {program_pathname}")
+                command = [program_pathname, pathname]
+                actions.user.exec(command)
+                return
+
+        actions.user.open_file_default(pathname)
 
     def fisher_index_files():
         """Index files (ad-hoc)"""

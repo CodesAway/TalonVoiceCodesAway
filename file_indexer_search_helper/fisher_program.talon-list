@@ -1,4 +1,5 @@
 list: user.fisher_program
 -
+default: default
 code: %LocalAppData%\Programs\Microsoft VS Code\Code.exe
 inkscape: %Dropbox%\Programs\InkscapePortable\InkscapePortable.exe
