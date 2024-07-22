@@ -37,6 +37,9 @@ mic default:                                    user.microphone_select(2)
 [<number_small>] word left:                     key("ctrl-left:{number_small or 1}")
 [<number_small>] word right:                    key("ctrl-right:{number_small or 1}")
 
+[<number_small>] select word left:              key("ctrl-shift-left:{number_small or 1}")
+[<number_small>] select word right:             key("ctrl-shift-right:{number_small or 1}")
+
 # Ctrl + shift + key (usually selects text)
 [<number_small>] graph ups:                     key("ctrl-shift-up:{number_small or 1}")
 [<number_small>] graph downs:                   key("ctrl-shift-down:{number_small or 1}")

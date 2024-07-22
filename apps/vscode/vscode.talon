@@ -55,3 +55,18 @@ editor right:                                   key(ctrl-shift-pagedown)
 
 none check <user.cursorless_target>:
     user.insert_snippet_with_cursorless_target("nullCheck", "1", cursorless_target)
+
+search text [<user.text>]:
+    user.vscode("search.action.focusQueryEditorWidget")
+    sleep(100ms)
+    insert(text or "")
+
+search include [<user.text>]:
+    user.vscode("search.action.focusFilesToInclude")
+    sleep(100ms)
+    insert(text or "")
+
+search exclude [<user.text>]:
+    user.vscode("search.action.focusFilesToExclude")
+    sleep(100ms)
+    insert(text or "")
