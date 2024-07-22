@@ -114,7 +114,19 @@ def format_datetime(seconds: float) -> str:
 
         return f"{humanfriendly.format_timespan(now - seconds, max_units = 1)} ago"
 
-    return datetime.datetime.fromtimestamp(seconds).strftime("%Y-%m-%d %H:%M:%S")
+    seconds_datetime = datetime.datetime.fromtimestamp(seconds)
+
+    # If doesn't have time part, just show date (noticed lost of old files from Dropbox like this)
+    if (
+        seconds_datetime.hour
+        == seconds_datetime.minute
+        == seconds_datetime.second
+        == seconds_datetime.microsecond
+        == 0
+    ):
+        return seconds_datetime.strftime("%Y-%m-%d")
+
+    return seconds_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
 
 @imgui.open()
