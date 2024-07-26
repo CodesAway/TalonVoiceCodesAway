@@ -26,7 +26,7 @@ for <user.text_code_codesaway> in <user.text_code_codesaway>:
     insert("for {variable} in {iterable}")
 
 if <user.text_code_codesaway>:
-    insert("if {text_code_codesaway}:")
+    user.insert_between("if {text_code_codesaway}", ":")
 
 else if <user.text_code_codesaway>:
-    insert("elif {text_code_codesaway}:")
+    user.insert_between("elif {text_code_codesaway}", ":")

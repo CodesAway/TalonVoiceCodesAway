@@ -1,14 +1,24 @@
 list: user.key_punctuation_code_codesaway
 -
 
-colon:                      :
-comma:                      ,
-divide:                     /
-dot:                        .
-exclamation mark:           !
-greater than:               >
-less than:                  <
-question mark:              ?
-slash:                      /
-star:                       *
-underscore:                 _
+band:                                           !
+colon:                                          :
+comma:                                          ,
+dash:                                           -
+divide:                                         /
+dot:                                            .
+equals:                                         =
+exclamation mark:                               !
+greater than:                                   >
+hash:                                           "#"
+is equal:                                       ==
+less than:                                      <
+negative:                                       -
+not equal:                                      !=
+one:                                            1
+question mark:                                  ?
+slash:                                          /
+space:                                          " "
+star:                                           *
+underscore:                                     _
+zero:                                           0
