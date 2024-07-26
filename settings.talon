@@ -11,3 +11,5 @@ settings():
     # Try longer timeout (default 0.3, so I have more time to pause and think)
     speech.timeout = 0.4
     imgui.dark_mode = true
+    # Used by andreas_talon/analyze_phrase/busage.py
+    # user.pretty_print_phrase = true
