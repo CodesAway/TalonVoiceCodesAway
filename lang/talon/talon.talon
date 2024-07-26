@@ -1,5 +1,5 @@
 code.language: talon
 -
-dot <user.text>:                                insert('.{user.reformat_text(text, "snake")}')
-var <user.text>:                                insert(user.reformat_text(text, "snake"))
+dot <user.text_code_codesaway>:                 insert('.{user.formatted_text(text_code_codesaway, "snake")}')
+var <user.text_code_codesaway>:                 insert(user.formatted_text(text_code_codesaway, "snake"))
 no args:                                        insert('()')

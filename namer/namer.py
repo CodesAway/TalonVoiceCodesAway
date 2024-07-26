@@ -200,7 +200,7 @@ class Actions:
         snippets_dir = settings.get("user.snippets_dir")
         logging.debug(f"snippets_dir: {snippets_dir}")
 
-        snippet_name = actions.user.reformat_text(name, "camel")
+        snippet_name = actions.user.formatted_text(name, "camel")
         logging.debug(f"name: {snippet_name}")
 
         language = actions.code.language()
