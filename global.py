@@ -1,6 +1,7 @@
 import subprocess
 
-from talon import Context, Module, actions, app
+from talon import Context, Module, actions, app, settings
+from talon.scripting.types import SettingValue
 
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
@@ -39,3 +40,7 @@ class Actions:
         child_processes.append(
             subprocess.Popen(command, shell=True),
         )
+
+    def get_setting(setting_name: str) -> SettingValue:
+        """Get setting with specified name"""
+        return settings.get(setting_name)
