@@ -1,9 +1,37 @@
-from talon import Module, cron, ui
+import random
+
+from talon import (
+    Context,
+    Module,
+    actions,
+    cron,  # type: ignore
+    registry,
+    ui,  # type: ignore
+)
 from talon.canvas import Canvas
 from talon.skia import Paint, Rect
 from talon.skia.canvas import Canvas as SkiaCanvas
 
 mod = Module()
+mod.list("tag_game_command", desc="Commands for Talon Adventure Game")
+mod.tag("tag_game", "Playing Talon Adventure Game")
+
+ctx = Context()
+
+tag_game_commands = dict()
+tag_game_commands.update(registry.lists["user.letter"][0])
+# TODO: move to talon-list (so can read based on which module want to work on)
+tag_game_commands["git stage"] = "Add git file contents to the staging area"
+
+tag_game_commands_list = list(tag_game_commands.keys())
+
+ctx.lists["user.tag_game_command"] = tag_game_commands_list
+
+# TODO: make class to store details?
+# Reference: community\core\mouse_grid\mouse_grid.py
+
+tag_cron: cron = None
+tag_game_last_command: str = ""
 
 
 def calculate_bottom_border(paint: Paint):
@@ -21,11 +49,40 @@ def calculate_bottom_border(paint: Paint):
 
 @mod.action_class
 class Actions:
+    def tag_game_play():
+        """Plays Talon Adventure Game (TAG)"""
+        ctx.tags = ["user.tag_game"]
+        screen = actions.user.screens_get_by_number(1)
+        text = tag_game_commands_list[random.randrange(len(tag_game_commands_list))]
+        actions.user.tag_game_show_center_text(screen, text)
+
+    def tag_game_stop():
+        """Stops Talon Adventure Game (TAG)"""
+        global tag_game_last_command
+
+        # TODO: close canvas (once refactor into class)
+        ctx.tags = []
+        tag_game_last_command = ""
+
+    def tag_game_handle_command(command: str):
+        """Handles spoke TAG command"""
+        global tag_game_last_command
+
+        if command == tag_game_last_command:
+            tag_game_last_command = ""
+            command_description = tag_game_commands[command]
+            actions.app.notify(f"Command for '{command_description}'")
+        else:
+            actions.app.notify(f"Incorrect command '{command}'. Please try again.")
+
     def tag_game_show_center_text(screen: ui.Screen, text: str):
         """Shows text for tag game in center of screen"""
+        global tag_game_last_command
 
         # Reference: community\core\screens\screens.py -> show_screen_number,
         def on_draw(c: SkiaCanvas):
+            global tag_cron
+
             paint: Paint = c.paint
 
             paint.typeface = "arial"
@@ -56,8 +113,9 @@ class Actions:
             paint.color = "33b2cd"  # Amy's blue color
             c.draw_text(text, x, y)
 
-            cron.after("3s", canvas.close)
+            tag_cron = cron.after("3s", canvas.close)
 
         canvas = Canvas.from_screen(screen)
         canvas.register("draw", on_draw)
         canvas.freeze()
+        tag_game_last_command = text

@@ -1,3 +1,1 @@
-tag game play:
-    screen = user.screens_get_by_number(1)
-    user.tag_game_show_center_text(screen, "git stage jpqy")
+^tag game play$:                                user.tag_game_play()
