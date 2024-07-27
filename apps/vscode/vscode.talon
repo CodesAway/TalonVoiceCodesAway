@@ -12,6 +12,8 @@ focus editor:
     user.vscode("workbench.action.closeSidebar")
     user.vscode("workbench.action.closeAuxiliaryBar")
 
+tutorial focus:                                 user.vscode("cursorless.tutorial.focus")
+
 lower case:                                     user.vscode("editor.action.transformToLowercase")
 settings open:                                  key("ctrl-,")
 save sin:                                       user.vscode("workbench.action.files.saveWithoutFormatting")
