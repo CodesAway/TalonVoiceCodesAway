@@ -18,16 +18,9 @@ mod.tag("tag_game", "Playing Talon Adventure Game")
 
 ctx = Context()
 
-tag_game_commands = dict()
-tag_game_commands_list = list()
-
-# TODO: make class to store details?
-# Reference: community\core\mouse_grid\mouse_grid.py
-
-tag_game_last_command: str = ""
-
 
 # Reference: flex-mouse-grid\flex_mouse_grid.py
+# Reference: community\core\mouse_grid\mouse_grid.py
 class TalonAdventureGame:
     def __init__(self):
         self.screen: ui.Screen = None
@@ -143,14 +136,16 @@ class TalonAdventureGame:
         self.canvas.freeze()
 
     def set_random_command(self):
-        self.last_command = self.commands_list[
-            random.randrange(len(self.commands_list))
-        ]
+        last_command = self.last_command
+
+        while self.last_command == last_command:
+            self.last_command = self.commands_list[
+                random.randrange(len(self.commands_list))
+            ]
         self.redraw()
 
     def handle_command(self, command: str):
         if command == self.last_command:
-            self.last_command = ""
             # command_description = self.commands[command]
             # actions.app.notify(f"Command for '{command_description}'")
             self.set_random_command()
@@ -174,20 +169,9 @@ class Actions:
 
     def tag_game_stop():
         """Stops Talon Adventure Game (TAG)"""
-        global tag_game_last_command, tag_game_commands, tag_game_commands_list
-
         tag.deactivate()
         ctx.tags = []
-        tag_game_last_command = ""
-        tag_game_commands.clear()
-        tag_game_commands_list.clear()
 
     def tag_game_handle_command(command: str):
         """Handles spoke TAG command"""
         tag.handle_command(command)
-
-    def tag_game_show_center_text(screen: ui.Screen, text: str):
-        """Shows text for tag game in center of screen"""
-        global tag_game_last_command
-
-        tag_game_last_command = text
