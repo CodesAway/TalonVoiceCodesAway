@@ -28,6 +28,10 @@ maximize:
 slot {self.letter} [{self.letter}]:
     user.run_rpc_command("andreas.focusTab", "{letter_1}{letter_2 or ''}")
 
+# Reference: community\apps\vscode\vscode.talon (used similiar grammar as Rango)
+tab close other:                                user.vscode("workbench.action.closeOtherEditors")
+tab close all:                                  user.vscode("workbench.action.closeAllEditors")
+
 this run:                                       user.vscode_run_active()
 
 terminal open:                                  user.vscode("workbench.action.terminal.focus")
