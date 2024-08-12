@@ -1,3 +1,45 @@
+tracking.calibrate() -> None
+  Calibrate Eye Tracking
+tracking.control1_enabled() -> bool
+  Is Control Mouse (Legacy) Enabled?
+tracking.control1_toggle(state: bool = None) -> None
+  Toggle Control Mouse (Legacy)
+tracking.control_camera_toggle(state: bool = None) -> None
+  Toggle Camera View
+tracking.control_debug_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Debug View)
+tracking.control_enabled() -> bool
+  Is Control Mouse Enabled?
+tracking.control_gaze_focus_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Gaze Focus)
+tracking.control_gaze_scroll_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Gaze Scroll)
+tracking.control_gaze_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Gaze Control)
+tracking.control_head_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Head Control)
+tracking.control_mouse_jump_toggle(state: bool = None) -> None
+  Toggle Control Mouse 2 (Mouse Jump)
+tracking.control_toggle(state: bool = None) -> None
+  Toggle Control Mouse
+tracking.control_zoom_enabled() -> bool
+  Is Control Mouse (Zoom) Enabled?
+tracking.control_zoom_toggle(state: bool = None) -> None
+  Toggle Control Mouse (Zoom)
+tracking.zoom() -> None
+  Trigger Eye Zoom / Click
+tracking.zoom_cancel() -> None
+  Cancel Eye Zoom
+menu.check_for_updates()
+  Check for updates
+menu.open_debug_window()
+  Open Debug window
+menu.open_log()
+  Open Talon log
+menu.open_repl()
+  Open Talon REPL
+menu.open_talon_home()
+  Open Talon config folder
 app.bundle() -> str
   Get active app's bundle identifier
 app.executable() -> str
@@ -94,6 +136,8 @@ clip.set_text(text: str)
   Set clipboard text
 clip.text() -> str
   Get clipboard text
+clip.wait(fmt: str = 'text', timeout: float = 0.5)
+  Wait for the clipboard to change
 code.complete()
   Trigger code autocomplete
 code.extend_scope_end()
@@ -172,20 +216,22 @@ edit.cut()
   Cut selection to clipboard
 edit.delete()
   Delete selection
+edit.delete_all()
+  Delete all text in document
+edit.delete_left()
+  Delete left of cursor
 edit.delete_line()
   Delete line under cursor
 edit.delete_paragraph()
   Delete paragraph under cursor
+edit.delete_right()
+  Delete right of cursor
 edit.delete_sentence()
   Delete sentence under cursor
 edit.delete_word()
   Delete word under cursor
 edit.down()
   Move cursor down one row
-edit.extend_again()
-  Extend selection again in the same way
-edit.extend_column(n: int)
-  Extend selection to column <n>
 edit.extend_down()
   Extend selection down one row
 edit.extend_file_end()
@@ -194,8 +240,6 @@ edit.extend_file_start()
   Extend selection to start of file
 edit.extend_left()
   Extend selection left one column
-edit.extend_line(n: int)
-  Extend selection to include line <n>
 edit.extend_line_down()
   Extend selection down one full line
 edit.extend_line_end()
@@ -270,8 +314,6 @@ edit.line_swap_up()
   Swap the current line with the line above
 edit.line_up()
   Move cursor to start of line above
-edit.move_again()
-  Move cursor again in the same way
 edit.page_down()
   Move cursor down one page
 edit.page_up()
@@ -423,46 +465,517 @@ win.filename() -> str
   Return the open filename
 win.title() -> str
   Get window title
-tracking.calibrate() -> None
-  Calibrate Eye Tracking
-tracking.control1_enabled() -> bool
-  Is Control Mouse (Legacy) Enabled?
-tracking.control1_toggle(state: bool = None) -> None
-  Toggle Control Mouse (Legacy)
-tracking.control_debug_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Debug View)
-tracking.control_enabled() -> bool
-  Is Control Mouse Enabled?
-tracking.control_gaze_focus_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Gaze Focus)
-tracking.control_gaze_scroll_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Gaze Scroll)
-tracking.control_gaze_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Gaze Control)
-tracking.control_head_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Head Control)
-tracking.control_mouse_jump_toggle(state: bool = None) -> None
-  Toggle Control Mouse 2 (Mouse Jump)
-tracking.control_toggle(state: bool = None) -> None
-  Toggle Control Mouse
-tracking.control_zoom_enabled() -> bool
-  Is Control Mouse (Zoom) Enabled?
-tracking.control_zoom_toggle(state: bool = None) -> None
-  Toggle Control Mouse (Zoom)
-tracking.zoom() -> None
-  Trigger Eye Zoom / Click
-tracking.zoom_cancel() -> None
-  Cancel Eye Zoom
-menu.check_for_updates()
-  Check for updates
-menu.open_debug_window()
-  Open Debug window
-menu.open_log()
-  Open Talon log
-menu.open_repl()
-  Open Talon REPL
-menu.open_talon_home()
-  Open Talon config folder
+math.abs(x: float) -> float
+  Compute the absolute value of x
+math.acos(x: float) -> float
+  Compute the arc cosine of x, in radians
+math.acosh(x: float) -> float
+  Compute the inverse hyperbolic cosine of x
+math.asin(x: float) -> float
+  Compute the arc sine of x, in radians
+math.asinh(x: float) -> float
+  Compute the inverse hyperbolic sine of x
+math.atan(x: float) -> float
+  Compute the arc tangent of x, in radians
+math.atan2(x: float, y: float) -> float
+  Compute the arc tangent of (x / y), in radians
+math.atanh(x: float) -> float
+  Compute the inverse hyperbolic tangent of x
+math.bin(n: <function MathActions.int at 0x000002B91FC099E0>) -> str
+  Convert number to binary string
+math.cbrt(x: float) -> float
+  Compute the cube root of x
+math.ceil(x: float) -> float
+  Compute the smallest integer greater than or equal to x
+math.comb(n: int, k: int) -> int
+  Compute the number of ways to choose k from n unordered
+math.copysign(x: float, y: float) -> float
+  Compute the value of x with the sign of y
+math.cos(x: float) -> float
+  Compute the cosine of x, in radians
+math.cosh(x: float) -> float
+  Compute the hyperbolic cosine of x
+math.degrees(x: float) -> float
+  Convert the angle x from radians to degrees
+math.e() -> float
+  Get the constant e
+math.erf(x: float) -> float
+  Compute the error function of x
+math.erfc(x: float) -> float
+  Compute the complimentary error function of x
+math.exp(x: float) -> float
+  Compute e ** x
+math.exp2(x: float) -> float
+  Compute 2 ** x
+math.expm1(x: float) -> float
+  Compute e ** x - 1
+math.factorial(n: int) -> int
+  Compute the factorial of n
+math.floor(x: float) -> float
+  Compute the largest integer less than or equal to x
+math.fmod(x: float, y: float) -> float
+  Compute floating point modulo of x % y
+math.frexp_e(x: float) -> float
+  Get the floating point exponent of x
+math.frexp_m(x: float) -> float
+  Get the floating point mantissa of x
+math.gamma(x: float) -> float
+  Compute the gamma function of x
+math.hex(n: <function MathActions.int at 0x000002B91FC099E0>) -> str
+  Convert number to hex string
+math.inf() -> float
+  Get the constant inf
+math.int(s: str, base: int = 10) -> int
+  Convert string to integer
+math.isclose(a: float, b: float) -> bool
+  Check whether a is close to b
+math.isfinite(x: float) -> bool
+  Check whether x is a finite number
+math.isinf(x: float) -> bool
+  Check whether x is infinity
+math.isnan(x: float) -> bool
+  Check whether x is NaN
+math.isqrt(n: int) -> int
+  Compute integer square root of n
+math.ldexp(m: float, e: int) -> float
+  Combine a mantissa and exponent into a float
+math.lgamma(x: float) -> float
+  Compute the log gamma function of x
+math.log(x: float) -> float
+  Compute the natural log of x
+math.log1p(x: float) -> float
+  Compute the natural log of 1+x
+math.log2(x: float) -> float
+  Compute the base-2 log of x
+math.logn(x: float, n: float) -> float
+  Compute the base-n log of x
+math.max(a: int, b: int) -> int
+  Select the larger number
+math.min(a: int, b: int) -> int
+  Select the smaller number
+math.mod(x: int, y: int) -> int
+  Compute modulo of x % y
+math.modf_f(x: float) -> int
+  Get the fractional part of x
+math.modf_i(x: float) -> int
+  Get the integer part of x
+math.nan() -> float
+  Get the constant nan
+math.oct(n: <function MathActions.int at 0x000002B91FC099E0>) -> str
+  Convert number to octal string
+math.perm(n: int, k: Optional[int] = None) -> int
+  Compute the ways to choose k items from n ordered
+math.pi() -> float
+  Get the constant pi
+math.pow(x: float, y: float) -> float
+  Compute x raised to the power y
+math.radians(x: float) -> float
+  Convert the angle x from degrees to radians
+math.random() -> float
+  Generate random number between 0.0 - 1.0
+math.randrange(a: int, b: int) -> int
+  Generate random number where a <= n < b
+math.remainder(x: float, y: float) -> float
+  Compute the remainder of x / y
+math.round(n: float, precision: Optional[int] = None) -> float
+  Round to nearest, with optional precision
+math.sin(x: float) -> float
+  Compute the sine of x, in radians
+math.sinh(x: float) -> float
+  Compute the hyperbolic sine of x
+math.sqrt(x: float) -> float
+  Compute the square root of x
+math.tan(x: float) -> float
+  Compute the tangent of x, in radians
+math.tanh(x: float) -> float
+  Compute the hyperbolic tangent of x
+math.tau() -> float
+  Get the constant tau
+math.trunc(x: float) -> int
+  Get the integer part of x
+math.urandom(n: int) -> bytes
+  Generate n cryptographically random bytes
+bytes.base64(b: bytes) -> str
+  Convert bytes to base64
+bytes.decode(b: bytes, encoding: str = 'utf8', errors: str = 'strict') -> bytes
+  Decode bytes to string
+bytes.frombase64(s: str) -> bytes
+  Convert base64 to bytes
+bytes.fromhex(s: str) -> bytes
+  Convert hex to bytes
+bytes.hex(b: bytes) -> str
+  Convert bytes to hex
+string.capitalize(s: str) -> str
+  Capitalize the first letter of string
+string.casefold(s: str) -> str
+  Case fold string
+string.center(s: str, width: int, fillchar: Optional[str] = None) -> str
+  Center string by padding to width
+string.chr(i: int) -> str
+  Convert a Unicode code point into a string
+string.contains(haystack: str, needle: str) -> bool
+  Check whether haystack contains needle
+string.count(s: str, sub: str, start: Optional[int] = None, end: Optional[int] = None) -> str
+  Count the number of instances of sub in string, with optional start/end
+string.encode(s: str, encoding: str = 'utf8') -> bytes
+  Encode string to bytes
+string.endswith(s: str, suffix: str) -> bool
+  Check whether string ends with suffix
+string.expandtabs(s: str, tabsize: int = 8) -> str
+  Expand tabs to spaces
+string.find(s: str, sub: str, start: Optional[int] = None, end: Optional[int] = None)
+  Find sub in string, with optional start/end
+string.index(s: str, sub: str, start: Optional[int] = None, end: Optional[int] = None)
+  Find sub in string, with optional start/end, raising an error if not found
+string.isalnum(s: str) -> bool
+  Check if string contains only alphanumeric characters
+string.isalpha(s: str) -> bool
+  Check if string contains only alphabet characters
+string.isascii(s: str) -> bool
+  Check if string contains only ascii characters
+string.isdecimal(s: str) -> bool
+  Check if string contains only decimal characters
+string.isdigit(s: str) -> bool
+  Check if string contains only digits
+string.islower(s: str) -> bool
+  Check if string is lowercase
+string.isprintable(s: str) -> bool
+  Check if string contains only printable characters
+string.isspace(s: str) -> bool
+  Check if string contains only whitespace characters
+string.istitle(s: str) -> bool
+  Check if string is title cased
+string.isupper(s: str) -> bool
+  Check if string is uppercase
+string.join(s: str, sequence: Sequence[str]) -> str
+  Join a sequence using string
+string.ljust(s: str, width: int, fillchar: Optional[str] = None) -> str
+  Left justify string by padding to width
+string.lower(s: str) -> str
+  Lowercase string
+string.lstrip(s: str, chars: Optional[str] = None) -> str
+  Strip characters from the left of string
+string.ord(s: str) -> int
+  Convert a character into a Unicode code point
+string.removeprefix(s: str, prefix: str) -> str
+  Remove prefix from string if present
+string.removesuffix(s: str, suffix: str) -> str
+  Remove suffix from string if present
+string.replace(s: str, old: str, new: str, count: int = -1) -> str
+  Replace [count] instances of old with new
+string.rfind(s: str, sub: str, start: Optional[int] = None, end: Optional[int] = None)
+  Find sub in string (from the right), with optional start/end
+string.rindex(s: str, sub: str, start: Optional[int] = None, end: Optional[int] = None)
+  Find sub in string (from the right), with optional start/end, raising an error if not found
+string.rjust(s: str, width: int, fillchar: Optional[str] = None) -> str
+  Right justify string by padding to width
+string.rsplit(s: str, sep: Optional[str] = None, maxsplit: int = -1) -> str
+  Split using separator or whitespace [maxsplit] times from the right
+string.rstrip(s: str, chars: Optional[str] = None) -> str
+  Strip characters from the right of string
+string.slice(s: str, a: int, b: Optional[int] = None, c: Optional[int] = None)
+  Slice string, following python slicing rules [a:b:c]
+string.split(s: str, sep: Optional[str] = None, maxsplit: int = -1) -> str
+  Split using separator or whitespace [maxsplit] times
+string.splitlines(s: str, keepends: bool = False) -> list[str]
+  Split string into a list of lines
+string.startswith(s: str, prefix: str) -> bool
+  Check whether string starts with prefix
+string.strip(s: str, chars: Optional[str] = None) -> str
+  Strip characters from both sides of string
+string.swapcase(s: str) -> str
+  Swap the case of string
+string.title(s: str) -> str
+  Titlecase string
+string.upper(s: str) -> str
+  Uppercase string
+dict.clear(d: dict) -> None
+  Clear a dict
+dict.contains(d: dict, key: Any) -> bool
+  Check if key appears in dict
+dict.copy(d: dict) -> dict
+  Copy a dict
+dict.get(d: dict, key: Any, default: Any = None) -> Any
+  Get dict[key]
+dict.new() -> dict
+  Create an empty dict
+dict.pop(d: dict, key: Any) -> Any
+  Remove and return dict[key]
+dict.set(d: dict, key: Any, value: Any) -> None
+  Set dict[key] = value
+dict.update(a: dict, b: dict) -> None
+  Copy all key/value pairs from b into a
+list.append(l: list, value: Any) -> None
+  Append to a list
+list.clear(l: list) -> None
+  Clear a list
+list.contains(l: list, value: Any) -> bool
+  Check if value appears in list
+list.copy(l: list) -> list
+  Copy a list
+list.count(l: list, value: Any) -> int
+  Count the number of times value appears in a list
+list.extend(a: list, b: list) -> None
+  Append every item of b to a
+list.get(l: list, index: int) -> Any
+  Get list[index]
+list.index(l: list, value: Any) -> int
+  Get the first index of value
+list.insert(l: list, index: int, value: Any) -> int
+  Insert value into list at index
+list.new() -> list
+  Create an empty list
+list.pop(l: list, index: int = -1) -> Any
+  Remove and return item from list at index
+list.remove(l: list, value: Any) -> None
+  Remove value from list
+list.reverse(l: list) -> None
+  Reverse list in place
+list.set(l: list, index: int, value: Any) -> None
+  Set list[index] = value
+list.sort(l: list) -> None
+  Sort list in place
+set.add(s: set, value: Any) -> None
+  Add value to set
+set.clear(s: set) -> None
+  Clear set
+set.contains(s: set, value: Any) -> bool
+  Check if value appears in set
+set.copy(s: set) -> set
+  Copy set
+set.difference(a: set, b: set) -> set
+  Get the difference of two sets
+set.discard(s: set, value: Any) -> None
+  Remove value from set if it exists
+set.intersection(a: set, b: set) -> set
+  Get the intersection of two sets
+set.isdisjoint(a: set, b: set) -> bool
+  True if a and b don't intersect
+set.issubset(a: set, b: set) -> bool
+  True if b contains a
+set.issuperset(a: set, b: set) -> bool
+  True if a contains b
+set.new() -> set
+  Create an empty set
+set.pop(s: set) -> Any
+  Remove and return arbitrary set item
+set.remove(s: set, value: Any) -> None
+  Remove value from set
+set.symmetric_difference(a: set, b: set) -> set
+  Get all values present in exactly one of the provided sets
+set.union(a: set, b: set) -> set
+  Get the union of a and b
+set.update(a: set, b: set) -> None
+  Add all items from b to a
+tuple.contains(t: tuple, value: Any) -> bool
+  Check if value appears in tuple
+tuple.count(t: tuple, value: Any) -> int
+  Count the number of times value appears in tuple
+tuple.index(t: tuple, value: Any) -> int
+  Get the first index of value
+tuple.new() -> tuple
+  Create an empty tuple
+types.bytes(v: Any = <object object at 0x000002B97C401D50>) -> str
+  Create a bytes object
+types.dict() -> dict
+  Create a dict
+types.list(v: Any = <object object at 0x000002B97C401D50>) -> <function TypesActions.str at 0x000002B91FC35D00>
+  Create a list
+types.none() -> None
+  Get an instance of None
+types.set(v: Any = <object object at 0x000002B97C401D50>) -> set
+  Create a set
+types.str(v: Any = <object object at 0x000002B97C401D50>) -> str
+  Create a string
+types.tuple(v: Any = <object object at 0x000002B97C401D50>) -> tuple
+  Create a tuple
+time.day(dt: datetime.datetime) -> int
+  Get the day from a datetime
+time.format(dt: datetime.datetime, fmt: str) -> str
+  Format a datetime strftime-style
+time.fromisoformat(s: str) -> datetime.datetime
+  Get a datetime from ISO 8601 format
+time.fromtimestamp(ts: float) -> datetime.datetime
+  Get datetime from unix timestamp
+time.fromutctimestamp(ts: float) -> datetime.datetime
+  Get datetime from UTC unix timestamp
+time.hour(dt: datetime.datetime) -> int
+  Get the hour from a datetime
+time.isoformat(dt: datetime.datetime) -> str
+  Format a datetime using ISO 8601
+time.microsecond(dt: datetime.datetime) -> int
+  Get the microseconds from a datetime
+time.minute(dt: datetime.datetime) -> int
+  Get the minute from a datetime
+time.monotonic() -> float
+  Get monotonic system time
+time.month(dt: datetime.datetime) -> int
+  Get the month from a datetime
+time.now() -> datetime.datetime
+  Get the current date/time
+time.parse(s: str, fmt: str) -> datetime.datetime
+  Parse a datetime, strptime-style
+time.second(dt: datetime.datetime) -> int
+  Get the seconds from a datetime
+time.timestamp(dt: datetime.datetime) -> float
+  Get unix timestamp from datetime
+time.utcnow() -> datetime.datetime
+  Get the current date/time in UTC
+time.utctimestamp(dt: datetime.datetime) -> float
+  Get UTC unix timestamp from datetime
+time.year(dt: datetime.datetime) -> int
+  Get the year from a datetime
+user.homophones_replace_words(words: list[str]) -> list[str]
+  Replace words with recently chosen homophones
+user.dictation_format_cap()
+  Sets the dictation formatter to capitalize
+user.dictation_format_no_cap()
+  Sets the dictation formatter to not capitalize
+user.dictation_format_no_space()
+  Sets the dictation formatter to not prepend a space
+user.dictation_format_reset()
+  Resets the dictation formatter
+user.dictation_insert(text: str, auto_cap: bool = True) -> str
+  Inserts dictated text, formatted appropriately.
+user.dictation_insert_raw(text: str)
+  Inserts text as-is, without invoking the dictation formatter.
+user.dictation_peek(left: bool, right: bool) -> tuple[typing.Optional[str], typing.Optional[str]]
+  Gets text around the cursor to inform auto-spacing and -capitalization.
+        Returns (before, after), where `before` is some text before the cursor,
+        and `after` some text after it. Results are not guaranteed; `before`
+        and/or `after` may be None, indicating no information. If `before` is
+        the empty string, this means there is nothing before the cursor (we are
+        at the beginning of the document); likewise for `after`.
+
+        To optimize performance, pass `left = False` if you won't need
+        `before`, and `right = False` if you won't need `after`.
+
+        dictation_peek() is intended for use before inserting text, so it may
+        delete any currently selected text.
+user.dictation_reformat_cap()
+  Capitalizes the last utterance
+user.dictation_reformat_no_cap()
+  Lowercases the last utterance
+user.dictation_reformat_no_space()
+  Removes space before the last utterance
+user.copyq_choose(index: int)
+  Choose selected clipboard item and paste it
+user.vscode_run_active()
+  Run active file in VSCode
+user.cancel_in_flight_phrase()
+  Cancels phrase currently being spoken
+user.cancel_in_flight_phrase_loud()
+  Cancels phrase currently being spoken
+user.maybe_hide_history()
+  Hides history if mode wants it
+user.sleep_all()
+  Sleeps talon and hides everything
+user.wake_all()
+  Wakes talon and shows everything
+user.bring_app(path: str) -> None
+  Open application at specified path (replacing environment variables and focusing if already open)
+user.launch_app(app: Tuple[str, ...]) -> None
+  Open application (focusing if already open)
+user.maximize_title(title: str) -> None
+  Maximize window with specified title (leave blank to target active window)
+user.minimize_title(title: str) -> None
+  Minimize window with specified title (leave blank to target active window)
+user.snap_window_to_position_twice(position_name: str) -> None
+  Snap window to position (twice as workaround)
+user.insert_snippet_with_cursorless_target(name: str, variable_name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
+  Insert snippet <name> with cursorless target <target>
+user.fisher_draft(search_text: str)
+  Opens draft editor populating with initial search_text (or global fisher_search_text if blank)
+user.fisher_get_search_result_pathname(index: int) -> str
+  Gets the search results pathname at the specified index
+user.fisher_hide_search_results()
+  Hides the GUI for fisher search results
+user.fisher_index_files()
+  Index files (ad-hoc)
+user.fisher_open_file(pathname: str, program_pathname: str = '')
+  Opens the file
+user.fisher_search(search_text: str)
+  Search for the specified text
+user.fisher_show_search_results()
+  Shows the GUI for fisher search results
+user.fisher_toggle_search_results()
+  Toggles the GUI for fisher search results
+user.open_file_default_program(pathname: str)
+  Open file in default program
+user.exec(command: str)
+  Execute command
+user.get_setting(setting_name: str) -> Union[float, int, str, list[Any]]
+  Get setting with specified name
+user.namer_clear_all_variables() -> None
+  Clears all namer variables (sets to blank)
+user.namer_clear_variable(variable: str) -> None
+  Clears namer variable (sets to blank)
+user.namer_clipboard_variable(variable: str)
+  Sets namer variable to clipboard contents
+user.namer_copy_variable(variable: str)
+  Copies current text to clipboard and sets as namer variable
+user.namer_delete_all_variables() -> None
+  Deletes all namer variables
+user.namer_delete_variable(variable: str) -> None
+  Deletes namer variable
+user.namer_get_variable(variable: str)
+  Gets namer variable
+user.namer_hide_variables()
+  Hides the GUI for namer variables
+user.namer_insert_snippet(name: str)
+  Insert snippet <name>
+user.namer_make_snippet(name: str, body: str)
+  Makes snippet
+user.namer_set_variable(variable: str, value: str) -> None
+  Sets namer variable
+user.namer_show_variables()
+  Shows the GUI for namer variables
+user.namer_strip_variable(variable: str)
+  Strips namer variable (removes leading / trailing whitespace)
+user.namer_toggle_variables()
+  Toggles the GUI for namer variables
+user.media_play_pause() -> None
+  Play or pause media (overrides functionality in community)
+user.mouse_move_continuous(x: int = 0, y: int = 0)
+  Move the cursor continuously
+user.mouse_move_continuous_direction(direction: str)
+  Move the cursor to the relative position in the specified direction
+user.mouse_move_speed(speed: int = 0)
+  Adjust move speed relative to current speed (or 0 to reset)
+user.mouse_move_stop()
+  Stops mouse move
+user.relative_mouse_move(x: int = 0, y: int = 0)
+  Move the cursor to the relative position
+user.relative_mouse_move_direction(direction: str, amount: int = 0)
+  Move the cursor to the relative position in the specified direction
+user.set_user_mouse_mode(value: bool)
+  Sets the user mouse mode to the specified value
+user.clear_skats_stack()
+  Clear stack
+user.delete_skats_stack_index(index: int)
+  Delete value at index from stack
+user.dig_skats_stack(index: int)
+  Moves value at index to top of stack
+user.hide_skats_stack()
+  Hides the GUI for skats stack
+user.peek_skats_stack()
+  Peek top value of stack
+user.peek_skats_stack_index(index: int)
+  Peek value at index of stack
+user.pop_skats_stack()
+  Pop top value from stack
+user.pop_skats_stack_index(index: int)
+  Pop value at index from stack
+user.push_skats_stack(value: str)
+  Push value on top of stack
+user.push_skats_stack_index_list(index: int, values: list[str])
+  Push values on stack at index
+user.push_skats_stack_list(values: list[str])
+  Push value on stack
+user.show_skats_stack()
+  Shows the GUI for skats stack
+user.toggle_skats_stack()
+  Toggles the GUI for skats stack
 user.password_delete()
   Delete password
 user.password_duplicate()
@@ -667,8 +1180,6 @@ user.switcher_menu()
   Open a menu of running apps to switch to
 user.switcher_toggle_running()
   Shows/hides all running applications
-user.move_cursor(s: str)
-  Given a sequence of directions, eg. 'left left up', moves the cursor accordingly using edit.{left,right,up,down}.
 user.create_spoken_forms(source: str, words_to_exclude: Optional[list[str]] = None, minimum_term_length: int = 2, generate_subsequences: bool = True) -> list[str]
   Create spoken forms for a given source
 user.create_spoken_forms_from_list(sources: list[str], words_to_exclude: Optional[list[str]] = None, minimum_term_length: int = 2, generate_subsequences: bool = True) -> dict[str, str]
@@ -692,54 +1203,30 @@ user.deprecate_command(time_deprecated: str, name: str, replacement: str)
   Notify the user that the given voice command is deprecated and should
         not be used into the future; the command `replacement` should be used
         instead.
-user.copy_all()
-  Copy all text in the current document
-user.copy_line()
-  Copy current line
-user.copy_line_end()
-  Copy to end of current line
-user.copy_line_start()
-  Copy to start of current line
-user.copy_word()
-  Copy word under cursor
+user.dragon_engine_command_mode()
+  Switch dragon to command mode. Requires Pro.
+user.dragon_engine_normal_mode()
+  Switch dragon to normal mode. Requires Pro.
+user.dragon_engine_sleep()
+  Sleep the dragon engine
+user.dragon_engine_wake()
+  Wake the dragon engine
 user.copy_word_left()
   Copies the word to the left.
 user.copy_word_right()
   Copies the word to the right.
-user.cut_all()
-  Cut all text in the current document
 user.cut_line()
   Cut current line
-user.cut_line_end()
-  Cut to end of current line
-user.cut_line_start()
-  Cut to start of current line
-user.cut_word()
-  Cut word under cursor
 user.cut_word_left()
   Cuts the word to the left.
 user.cut_word_right()
   Cuts the word to the right.
-user.delete_all()
-  Delete all text in the current document
-user.delete_line_end()
-  Delete to end of current line
-user.delete_line_start()
-  Delete to start of current line
 user.delete_right()
   Delete character to the right
+user.line_middle()
+  Go to the middle of the line
 user.paste(text: str)
   Pastes text and preserves clipboard
-user.paste_all()
-  Paste to the current document
-user.paste_line()
-  Paste to current line
-user.paste_line_end()
-  Paste to end of current line
-user.paste_line_start()
-  Paste to start of current line
-user.paste_word()
-  Paste to word under cursor
 user.select_line_end()
   Select to end of current line
 user.select_line_start()
@@ -748,23 +1235,27 @@ user.words_left(n: int)
   Moves left by n words.
 user.words_right(n: int)
   Moves right by n words.
+user.edit_command(action: user.community.core.edit.edit_command_actions.EditAction, modifier: user.community.core.edit.edit_command_modifiers.EditModifier)
+  Perform edit command
+user.perform_navigation_steps(steps: list[user.community.core.edit.edit_navigation_steps.NavigationStep])
+  Navigate by a series of steps
+user.copy_paragraph()
+  Copy paragraph under the cursor
+user.cut_paragraph()
+  Cut paragraph under the cursor
+user.paste_paragraph()
+  Paste to paragraph under the cursor
 user.insert_between(before: str, after: str)
   Insert `before + after`, leaving cursor between `before` and `after`. Not entirely reliable if `after` contains newlines.
 user.insert_cursor(text: str)
   Insert a string. Leave the cursor wherever [|] is in the text
 user.edit_text_file(path: str)
   Tries to open a file in the user's preferred text editor.
-user.engine_mimic(cmd: str)
-  Sends phrase to engine
-user.engine_sleep()
-  Sleep the engine
-user.engine_wake()
-  Wake the engine
 user.help_context()
   Display contextual command info
 user.help_context_enabled()
   Display contextual command info
-user.help_formatters(ab: dict)
+user.help_formatters(ab: dict, reformat: bool)
   Provides the list of formatter keywords
 user.help_hide()
   Hides the help
@@ -802,6 +1293,10 @@ user.homophones_show_auto()
   Show homophones for selection, or current word if selection is empty.
 user.homophones_show_selection()
   Show the homophones display for the selected text
+user.choose(number_small: int)
+  Choose the nth item
+user.choose_up(number_small: int)
+  Choose the nth item up
 user.code_clear_language_mode()
   Clears the active language mode, and re-enables code.language: extension matching
 user.code_set_language_mode(language: str)
@@ -828,6 +1323,10 @@ user.grid_reset()
   Resets the grid to fill the whole screen again
 user.grid_select_screen(screen: int)
   Brings up mouse grid
+user.go_back()
+  Navigate back
+user.go_forward()
+  Navigate forward
 user.noise_trigger_hiss(active: bool)
   Called when the user makes a 'hiss' noise. Listen to
         https://noise.talonvoice.com/static/previews/hiss.mp3 for an
@@ -844,8 +1343,12 @@ user.screens_get_previous(screen: talon.screen.Screen) -> talon.screen.Screen
   Get the screen before this one
 user.screens_show_numbering()
   Show screen number on each screen
+user.get_insertion_snippet(name: str) -> user.community.core.snippets.snippet_types.InsertionSnippet
+  Get insertion snippet named <name>
 user.get_snippet(name: str) -> user.community.core.snippets.snippet_types.Snippet
   Get snippet named <name>
+user.get_wrapper_snippet(name: str) -> user.community.core.snippets.snippet_types.WrapperSnippet
+  Get wrapper snippet named <name>
 user.insert_snippet(body: str)
   Insert snippet
 user.insert_snippet_by_name(name: str, substitutions: dict[str, str] = None)
@@ -858,12 +1361,14 @@ user.system_command_nb(cmd: str)
   execute a command on the system without blocking
 user.formatted_text(phrase: Union[str, talon.grammar.vm.Phrase], formatters: str) -> str
   Formats a phrase according to formatters. formatters is a comma-separated string of formatters (e.g. 'CAPITALIZE_ALL_WORDS,DOUBLE_QUOTED_STRING')
-user.formatters_reformat_last(formatters: str) -> str
+user.formatters_reformat_last(formatters: str)
   Clears and reformats last formatted phrase
-user.formatters_reformat_selection(formatters: str) -> str
-  Reformats the current selection.
+user.formatters_reformat_selection(formatters: str)
+  Reformats the current selection as <formatters>
 user.get_formatters_words() -> dict
-  returns a list of words currently used as formatters, and a demonstration string using those formatters
+  Returns words currently used as formatters, and a demonstration string using those formatters
+user.get_reformatters_words() -> dict
+  Returns words currently used as re-formatters, and a demonstration string using those re-formatters
 user.insert_formatted(phrase: Union[str, talon.grammar.vm.Phrase], formatters: str)
   Inserts a phrase formatted according to formatters. Formatters is a comma separated list of formatters (e.g. 'CAPITALIZE_ALL_WORDS,DOUBLE_QUOTED_STRING')
 user.insert_many(strings: list[str]) -> None
@@ -871,7 +1376,7 @@ user.insert_many(strings: list[str]) -> None
 user.insert_with_history(text: str)
   Inserts some text, remembering it in the phrase history.
 user.reformat_text(text: str, formatters: str) -> str
-  Reformat the text.
+  Re-formats <text> as <formatters>
 user.add_phrase_to_history(text: str)
   Adds a phrase to the phrase history
 user.before_last_phrase()
@@ -888,37 +1393,6 @@ user.select_last_phrase()
   Selects the last phrase
 user.toggle_phrase_history()
   Toggles list of recent phrases
-user.dictation_format_cap()
-  Sets the dictation formatter to capitalize
-user.dictation_format_no_cap()
-  Sets the dictation formatter to not capitalize
-user.dictation_format_no_space()
-  Sets the dictation formatter to not prepend a space
-user.dictation_format_reset()
-  Resets the dictation formatter
-user.dictation_insert(text: str, auto_cap: bool = True) -> str
-  Inserts dictated text, formatted appropriately.
-user.dictation_insert_raw(text: str)
-  Inserts text as-is, without invoking the dictation formatter.
-user.dictation_peek(left: bool, right: bool) -> tuple[typing.Optional[str], typing.Optional[str]]
-  Gets text around the cursor to inform auto-spacing and -capitalization.
-        Returns (before, after), where `before` is some text before the cursor,
-        and `after` some text after it. Results are not guaranteed; `before`
-        and/or `after` may be None, indicating no information. If `before` is
-        the empty string, this means there is nothing before the cursor (we are
-        at the beginning of the document); likewise for `after`.
-
-        To optimize performance, pass `left = False` if you won't need
-        `before`, and `right = False` if you won't need `after`.
-
-        dictation_peek() is intended for use before inserting text, so it may
-        delete any currently selected text.
-user.dictation_reformat_cap()
-  Capitalizes the last utterance
-user.dictation_reformat_no_cap()
-  Lowercases the last utterance
-user.dictation_reformat_no_space()
-  Removes space before the last utterance
 user.add_selection_to_vocabulary(phrase: Union[talon.grammar.vm.Phrase, str] = '', type: str = '')
   Permanently adds the currently selected text to the vocabulary with the provided
         spoken form and adds variants based on the type ("noun" or "name").
@@ -1157,12 +1631,31 @@ user.code_operator_indirection()
   code_operator_indirection
 user.code_operator_structure_dereference()
   code_operator_structure_dereference (e.g., C++ -> op)
+user.talon_code_enable_setting(setting: str)
+  asserts setting in either python or talon files
+user.talon_code_enable_tag(tag: str)
+  enables tag in either python or talon files
+user.talon_code_insert_action_call(text: str, selection: str)
+  inserts talon-specific action call
 user.code_terraform_data_source(text: str)
   Inserts a new data block with given name
 user.code_terraform_module_block(text: str)
   Inserts a new module-related block of a given type (e.g. variable, output, provider...)
 user.code_terraform_resource(text: str)
   Inserts a new resource block with given name
+user.are_you_sure_cancel()
+  Cancels the registered are you sure action
+user.are_you_sure_confirm()
+  Performs the registered are you sure action
+user.are_you_sure_set_on_confirmation_action(message: str, on_confirmation: Callable, on_cancel: Callable = None)
+  Sets the action to be performed on user confirmation.
+        message: the message to display to the user
+        on_confirmation: the action to perform if the user confirms
+        on_cancel: (optional) the action to perform if the user cancels
+        This only supports working with a single action at a time and
+        does not work with chaining as it is intended to be used with particularly destructive actions.
+user.cancel_current_phrase()
+  Cancel/abort current spoken phrase
 user.history_clear()
   Clear the history
 user.history_disable()
@@ -1207,6 +1700,84 @@ user.draft_editor_paste_last()
   Paste last submitted draft
 user.draft_editor_submit()
   Submit/save draft editor
+user.gamepad_button_down(button: str)
+  Gamepad press button <button>
+user.gamepad_button_up(button: str)
+  Gamepad release button <button>
+user.gamepad_press_dpad_down()
+  Gamepad press button dpad down
+user.gamepad_press_dpad_left()
+  Gamepad press button dpad left
+user.gamepad_press_dpad_right()
+  Gamepad press button dpad right
+user.gamepad_press_dpad_up()
+  Gamepad press button dpad up
+user.gamepad_press_east()
+  Gamepad press button east
+user.gamepad_press_left_shoulder()
+  Gamepad press button left shoulder
+user.gamepad_press_left_stick()
+  Gamepad press button left thumb stick
+user.gamepad_press_north()
+  Gamepad press button north
+user.gamepad_press_right_shoulder()
+  Gamepad press button right shoulder
+user.gamepad_press_right_stick()
+  Gamepad press button right thumb stick
+user.gamepad_press_select()
+  Gamepad press button select
+user.gamepad_press_south()
+  Gamepad press button south
+user.gamepad_press_start()
+  Gamepad press button start
+user.gamepad_press_west()
+  Gamepad press button west
+user.gamepad_release_dpad_down()
+  Gamepad release button dpad down
+user.gamepad_release_dpad_left()
+  Gamepad release button dpad left
+user.gamepad_release_dpad_right()
+  Gamepad release button dpad right
+user.gamepad_release_dpad_up()
+  Gamepad release button dpad up
+user.gamepad_release_east()
+  Gamepad release button east
+user.gamepad_release_left_shoulder()
+  Gamepad release button left shoulder
+user.gamepad_release_left_stick()
+  Gamepad release button left thumb stick
+user.gamepad_release_north()
+  Gamepad release button north
+user.gamepad_release_right_shoulder()
+  Gamepad release button right shoulder
+user.gamepad_release_right_stick()
+  Gamepad release button right thumb stick
+user.gamepad_release_select()
+  Gamepad release button select
+user.gamepad_release_south()
+  Gamepad release button south
+user.gamepad_release_start()
+  Gamepad release button start
+user.gamepad_release_west()
+  Gamepad release button west
+user.gamepad_stick_left(x: float, y: float)
+  Gamepad left stick movement
+user.gamepad_stick_right(x: float, y: float)
+  Gamepad right stick movement
+user.gamepad_trigger_left(value: float)
+  Gamepad trigger left movement
+user.gamepad_trigger_right(value: float)
+  Gamepad trigger right movement
+user.gamepad_tester_button(id: str, is_pressed: bool)
+  Indicates that a gamepad button has changed state
+user.gamepad_tester_stick(id: str, x: float, y: float)
+  Indicates that a gamepad stick has changed state
+user.gamepad_tester_toggle()
+  Toggle visibility of gamepad tester gui
+user.gamepad_tester_trigger(id: str, value: float)
+  Indicates that a gamepad trigger has changed state
+user.listening_timeout_expired()
+  Action called when the listening timeout expires
 user.macro_append_command(words: list[str])
   Appends a command to the current macro; called when a voice command is uttered while recording a macro.
 user.macro_copy(name: str)
@@ -1445,10 +2016,6 @@ user.file_manager_get_directory_by_index(index: int) -> str
   Returns the requested directory for the imgui display by index
 user.file_manager_get_file_by_index(index: int) -> str
   Returns the requested directory for the imgui display by index
-user.file_manager_go_back()
-  file_manager_go_forward_directory
-user.file_manager_go_forward()
-  file_manager_go_forward_directory
 user.file_manager_hide_pickers()
   Hides the pickers
 user.file_manager_new_folder(name: str)
@@ -1483,14 +2050,8 @@ user.file_manager_toggle_pickers()
   Shows the pickers
 user.file_manager_update_lists()
   Forces an update of the lists (e.g., when file or folder created)
-user.find(text: str)
-  Finds text in current editor
 user.find_everywhere(text: str)
   Finds text across project
-user.find_next()
-  Navigates to the next occurrence
-user.find_previous()
-  Navigates to the previous occurrence
 user.find_toggle_match_by_case()
   Toggles find match by case sensitivity
 user.find_toggle_match_by_regex()
@@ -1619,35 +2180,35 @@ user.terminal_rerun_search(command: str)
   Searches through the previously executed commands
 user.terminal_run_last()
   Repeats the last command
-user.private_cursorless_bring_move(action_name: str, targets: user.cursorless-talon.src.actions.bring_move.BringMoveTargets)
+user.private_cursorless_bring_move(action_name: str, targets: user.cursorless_talon.src.actions.bring_move.BringMoveTargets)
   Execute Cursorless move/bring action
-user.cursorless_get_text(target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], hide_decorations: bool = False) -> str
+user.cursorless_get_text(target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], hide_decorations: bool = False) -> str
   Get target text. If hide_decorations is True, don't show decorations
-user.cursorless_get_text_list(target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], hide_decorations: bool = False) -> list[str]
+user.cursorless_get_text_list(target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], hide_decorations: bool = False) -> list[str]
   Get texts for multiple targets. If hide_decorations is True, don't show decorations
-user.cursorless_command(action_name: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget])
+user.cursorless_command(action_name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget])
   Perform cursorless command on target
-user.cursorless_ide_command(command_id: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget])
+user.cursorless_ide_command(command_id: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
   Perform ide command on cursorless target
-user.cursorless_insert(destination: Union[user.cursorless-talon.src.targets.target_types.ListDestination, user.cursorless-talon.src.targets.target_types.PrimitiveDestination, user.cursorless-talon.src.targets.target_types.ImplicitDestination], text: Union[str, list[str]])
+user.cursorless_insert(destination: Union[user.cursorless_talon.src.targets.target_types.ListDestination, user.cursorless_talon.src.targets.target_types.PrimitiveDestination, user.cursorless_talon.src.targets.target_types.ImplicitDestination], text: Union[str, list[str]])
   Perform text insertion on Cursorless destination
-user.cursorless_vscode_command(command_id: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget])
+user.cursorless_vscode_command(command_id: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
   Perform vscode command on cursorless target
 
         Deprecated: prefer `cursorless_ide_command`
-user.private_cursorless_action_or_ide_command(instruction: dict[str, str], target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget])
+user.private_cursorless_action_or_ide_command(instruction: dict[str, str], target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
   Perform cursorless action or ide command on target (internal use only)
-user.private_cursorless_call(callee: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], argument: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget] = ImplicitTarget())
+user.private_cursorless_call(callee: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], argument: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget] = ImplicitTarget())
   Execute Cursorless call action
-user.private_cursorless_paste(destination: Union[user.cursorless-talon.src.targets.target_types.ListDestination, user.cursorless-talon.src.targets.target_types.PrimitiveDestination, user.cursorless-talon.src.targets.target_types.ImplicitDestination])
+user.private_cursorless_paste(destination: Union[user.cursorless_talon.src.targets.target_types.ListDestination, user.cursorless_talon.src.targets.target_types.PrimitiveDestination, user.cursorless_talon.src.targets.target_types.ImplicitDestination])
   Execute Cursorless paste action
-user.private_cursorless_reformat(target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], formatters: str)
+user.cursorless_reformat(target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget], formatters: str)
   Execute Cursorless reformat action. Reformat target with formatter
-user.private_cursorless_swap(targets: user.cursorless-talon.src.actions.swap.SwapTargets)
+user.private_cursorless_swap(targets: user.cursorless_talon.src.actions.swap.SwapTargets)
   Execute Cursorless swap action
-user.private_cursorless_wrap_with_paired_delimiter(action_name: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], paired_delimiter: list[str])
+user.private_cursorless_wrap_with_paired_delimiter(action_name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], paired_delimiter: list[str])
   Execute Cursorless wrap/rewrap with paired delimiter action
-user.private_cursorless_wrap_with_snippet(action_name: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], snippet_location: str)
+user.private_cursorless_wrap_with_snippet(action_name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], snippet_location: str)
   Execute Cursorless wrap with snippet action
 user.vscode_get_setting(key: str, default_value: Any = None)
   Get the value of vscode setting at the given key
@@ -1676,12 +2237,28 @@ user.private_cursorless_command_get(action: dict)
   Execute cursorless command and return result
 user.private_cursorless_command_no_wait(action: dict)
   Execute cursorless command without waiting
+user.private_cursorless_notify_docs_opened()
+  Notify the ide that the docs were opened in case the tutorial is waiting for that event
 user.private_cursorless_show_command_statistics()
   Show Cursorless command statistics
 user.private_cursorless_show_settings_in_ide()
   Show Cursorless-specific settings in ide
 user.private_cursorless_show_sidebar()
   Show Cursorless-specific settings in ide
+user.private_cursorless_start_tutorial()
+  Start the introductory Cursorless tutorial
+user.private_cursorless_tutorial_list()
+  Cursorless tutorial: list all available tutorials
+user.private_cursorless_tutorial_next()
+  Cursorless tutorial: next
+user.private_cursorless_tutorial_previous()
+  Cursorless tutorial: previous
+user.private_cursorless_tutorial_restart()
+  Cursorless tutorial: restart
+user.private_cursorless_tutorial_resume()
+  Cursorless tutorial: resume
+user.private_cursorless_tutorial_start_by_number(number: int)
+  Start Cursorless tutorial by number
 user.private_cursorless_run_rpc_command_and_wait(command_id: str, arg1: Any = None, arg2: Any = None)
   Execute command via rpc and wait for command to finish.
 user.private_cursorless_run_rpc_command_get(command_id: str, arg1: Any = None, arg2: Any = None) -> Any
@@ -1690,27 +2267,498 @@ user.private_cursorless_run_rpc_command_no_wait(command_id: str, arg1: Any = Non
   Execute command via rpc and DON'T wait.
 user.cursorless_private_extract_decorated_marks(capture: Any) -> list[dict]
   Cursorless private api: Extract all decorated marks from a Talon capture
-user.cursorless_private_build_list_target(elements: list[typing.Union[user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.RangeTarget]]) -> Union[user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ListTarget]
+user.cursorless_private_build_list_target(elements: list[typing.Union[user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.RangeTarget]]) -> Union[user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.ListTarget]
   Cursorless private api low-level target builder: Create a list target
-user.cursorless_private_build_primitive_target(modifiers: list[dict], mark: Optional[dict]) -> user.cursorless-talon.src.targets.target_types.PrimitiveTarget
+user.cursorless_private_build_primitive_target(modifiers: list[dict], mark: Optional[dict]) -> user.cursorless_talon.src.targets.target_types.PrimitiveTarget
   Cursorless private api low-level target builder: Create a primitive target
-user.cursorless_private_target_nothing() -> user.cursorless-talon.src.targets.target_types.PrimitiveTarget
+user.cursorless_private_target_nothing() -> user.cursorless_talon.src.targets.target_types.PrimitiveTarget
   Cursorless private api: Creates the "nothing" target
-user.cursorless_private_action_highlight(target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], highlightId: Optional[str] = None) -> None
+user.cursorless_private_action_highlight(target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], highlightId: Optional[str] = None) -> None
   Cursorless private api: Highlights a target
+user.cursorless_create_destination(target: user.cursorless_talon.src.targets.target_types.ListTarget | user.cursorless_talon.src.targets.target_types.RangeTarget | user.cursorless_talon.src.targets.target_types.PrimitiveTarget, insertion_mode: Literal['to', 'before', 'after'] = 'to') -> Union[user.cursorless_talon.src.targets.target_types.ListDestination, user.cursorless_talon.src.targets.target_types.PrimitiveDestination, user.cursorless_talon.src.targets.target_types.ImplicitDestination]
+  Cursorless: Create destination from target
+user.cursorless_custom_command(content: str, arg1: Optional[Any] = None, arg2: Optional[Any] = None, arg3: Optional[Any] = None)
+  Cursorless: Run custom parsed command
 user.private_cursorless_hide_scope_visualizer()
   Hides scope visualizer
 user.private_cursorless_show_scope_visualizer(scope_type: dict, visualization_type: str)
   Shows scope visualizer
-user.cursorless_insert_snippet(body: str, destination: Union[user.cursorless-talon.src.targets.target_types.ListDestination, user.cursorless-talon.src.targets.target_types.PrimitiveDestination, user.cursorless-talon.src.targets.target_types.ImplicitDestination, NoneType] = ImplicitDestination(), scope_type: Union[str, list[str], NoneType] = None)
+user.cursorless_insert_snippet(body: str, destination: Union[user.cursorless_talon.src.targets.target_types.ListDestination, user.cursorless_talon.src.targets.target_types.PrimitiveDestination, user.cursorless_talon.src.targets.target_types.ImplicitDestination] = ImplicitDestination(), scope_type: Union[str, list[str], NoneType] = None)
   Cursorless: Insert custom snippet <body>
 user.cursorless_insert_snippet_by_name(name: str)
   Cursorless: Insert named snippet <name>
-user.cursorless_wrap_with_snippet(body: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget], variable_name: Optional[str] = None, scope: Optional[str] = None)
+user.cursorless_wrap_with_snippet(body: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget], variable_name: Optional[str] = None, scope: Optional[str] = None)
   Cursorless: Wrap target with custom snippet <body>
-user.cursorless_wrap_with_snippet_by_name(name: str, variable_name: str, target: Union[user.cursorless-talon.src.targets.target_types.ListTarget, user.cursorless-talon.src.targets.target_types.RangeTarget, user.cursorless-talon.src.targets.target_types.PrimitiveTarget, user.cursorless-talon.src.targets.target_types.ImplicitTarget])
+user.cursorless_wrap_with_snippet_by_name(name: str, variable_name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
   Cursorless: Wrap target with a named snippet <name>
-user.private_cursorless_insert_snippet(insertion_snippet: user.cursorless-talon.src.snippets.InsertionSnippet)
+user.private_cursorless_insert_community_snippet(name: str, destination: Union[user.cursorless_talon.src.targets.target_types.ListDestination, user.cursorless_talon.src.targets.target_types.PrimitiveDestination, user.cursorless_talon.src.targets.target_types.ImplicitDestination])
+  Cursorless: Insert community snippet <name>
+user.private_cursorless_insert_snippet(insertion_snippet: user.cursorless_talon.src.snippets.InsertionSnippet)
   Execute Cursorless insert snippet action
 user.private_cursorless_insert_snippet_with_phrase(snippet_description: str, text: str)
   Cursorless: Insert snippet <snippet_description> with phrase <text>
+user.private_cursorless_wrap_with_community_snippet(name: str, target: Union[user.cursorless_talon.src.targets.target_types.ListTarget, user.cursorless_talon.src.targets.target_types.RangeTarget, user.cursorless_talon.src.targets.target_types.PrimitiveTarget, user.cursorless_talon.src.targets.target_types.ImplicitTarget])
+  Cursorless: Wrap target with community snippet <name>
+user.flex_grid_activate()
+  Place mouse grid over first screen
+user.flex_grid_adjust_bg_transparency(amount: int)
+  Increase or decrease the opacity of the background of the flex mouse grid (also returns new value)
+user.flex_grid_adjust_label_transparency(amount: int)
+  Increase or decrease the opacity of the labels behind text for the flex mouse grid (also returns new value)
+user.flex_grid_adjust_size(amount: int)
+  Increase or decrease size of everything
+user.flex_grid_box_config_change(parameter: str, delta: int)
+  Change box configuration parameter by delta
+user.flex_grid_box_config_lock(onoff: int)
+  Lock box config to prevent binary search
+user.flex_grid_boxes_threshold_view_toggle()
+  Show or hide boxes
+user.flex_grid_boxes_toggle(onoff: int)
+  Show or hide boxes
+user.flex_grid_checkers()
+  Set pattern to checkers
+user.flex_grid_deactivate()
+  Deactivate/close the grid
+user.flex_grid_find_boxes()
+  Find all boxes, label with hints
+user.flex_grid_frame()
+  Set pattern to frame
+user.flex_grid_full()
+  Set pattern to full
+user.flex_grid_go_to_box(box_number: int, mouse_button: int)
+  Go to a box
+user.flex_grid_go_to_point(point_name: str, index: int, mouse_button: int)
+  Go to a point, optionally click it
+user.flex_grid_go_to_point_relative(point_name: str, delta: int)
+  Go to a point relative to the last visited point in a list
+user.flex_grid_hide_grid()
+  Hide the grid
+user.flex_grid_info_toggle()
+  Show or hide informational UI
+user.flex_grid_input_horizontal(letter: str)
+  This command is for if you chose the wrong row and you want to choose a different row before choosing a column
+user.flex_grid_input_partial(letter: str)
+  Input one letter to highlight a row or column
+user.flex_grid_map_point_here(point_name: str)
+  Map a new point where the mouse cursor currently is
+user.flex_grid_map_points_by_box(point_name: str, box_number_list: List[int])
+  Map a new point or points by box number(s)
+user.flex_grid_map_points_by_box_range(point_name: str, box_number_list: List[int])
+  Map a new point or points by box number range
+user.flex_grid_map_points_by_letter(point_name: str, letter_list: List[str])
+  Map a new point or points by letter coordinates
+user.flex_grid_map_points_by_location_range(point_name: str, number_of_points: int, starting_box_number: int, ending_box_number: int)
+  Map points by giving a starting and ending box and number of points to interpolate
+user.flex_grid_map_points_by_raw_location_range(point_name: str, number_of_points: int, starting_x: int, starting_y: int, ending_x: int, ending_y: int)
+  Map points by giving a starting and ending point and number of points to interpolate
+user.flex_grid_phonetic()
+  Set pattern to phonetic
+user.flex_grid_place_window()
+  Place mouse grid over the currently active window
+user.flex_grid_points_toggle(onoff: int)
+  Show or hide mapped points
+user.flex_grid_rulers_toggle()
+  Show or hide rulers all around the window
+user.flex_grid_select_screen(screen: int)
+  Place mouse grid over specified screen
+user.flex_grid_show_grid()
+  Show the grid
+user.flex_grid_unmap_point(point_name: str)
+  Unmap a point or all points
+user.rango_command_with_target(actionType: str, target: Union[str, list[str]], arg: Union[str, float, NoneType] = None)
+  Executes a Rango command with target
+user.rango_command_without_target(actionType: str, arg: Union[str, float, NoneType] = None, arg2: Optional[str] = None, arg3: Optional[bool] = None)
+  Executes a Rango command without a target
+user.rango_run_command(action: dict)
+  Sends a request to the Rango extension, waits for the response and handles it
+user.rango_type_hotkey()
+  Presses the rango hotkey to read the command from the clipboard
+user.rango_clear_input(target: Union[str, list[str]])
+  Removes the contents of an input
+user.rango_force_direct_clicking()
+  Forces Rango direct clicking
+user.rango_force_explicit_clicking()
+  Forces Rango explicit clicking
+user.rango_get_bare_title() -> str
+  Returns the title of the currently focused tab without including the decorations
+user.rango_insert_text_to_input(text: str, target: Union[str, list[str]], pressEnter: bool)
+  Inserts a given text to an input marked with the target hint
+user.rango_run_action_on_reference(command: str, reference: str)
+  Runs a Rango command on a mark
+user.rango_run_action_on_text_matched_element(command: str, text: str, prioritize_viewport: Optional[bool] = False)
+  Runs a Rango command on a hintable element found using fuzzy search
+user.rango_toggle_hints()
+  It toggles the Rango hints globally on or off
+user.rango_try_to_focus_and_check_is_editable(target: Union[str, list[str]])
+  Tries to focus an element marked with a hint (clicking if it's not a link) and returns true if the active element is editable
+user.append_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the beginning of the provided text and
+        appends the rest to it.
+user.change_text_homophone(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Switch the on-screen text to a different homophone.
+user.choose_gaze_ocr_option(index: int)
+  Disambiguate with the provided index.
+user.click_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Click on the provided on-screen text.
+user.connect_ocr_eye_tracker()
+  Connects eye tracker to OCR.
+user.disconnect_ocr_eye_tracker()
+  Disconnects eye tracker from OCR.
+user.double_click_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Double-lick on the provided on-screen text.
+user.hide_gaze_ocr_options()
+  Hide the disambiguation UI.
+user.insert_adjacent_to_text(find_text: user.talon-gaze-ocr.timestamped_captures.TimestampedText, position: str, insertion_text: str)
+  Insert text adjacent to onscreen text.
+user.insert_text_difference(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the start and/or end of the provided text
+        and inserts the difference.
+user.middle_click_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Middle-click on the provided on-screen text.
+user.modifier_click_text(modifier: str, text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Control-click on the provided on-screen text.
+user.move_cursor_to_gaze_point(offset_right: int = 0, offset_down: int = 0)
+  Moves mouse cursor to gaze location.
+user.move_cursor_to_word(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Moves cursor to onscreen word.
+user.move_text_cursor_to_word(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText, position: str)
+  Moves text cursor near onscreen word.
+user.perform_ocr_action(ocr_action: str, ocr_modifier: str, text_range: user.talon-gaze-ocr.timestamped_captures.TextRange)
+  Selects text and performs an action.
+user.prepend_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the end of the provided text and
+        prepends the rest to it.
+user.replace_text(ocr_modifier: str, text_range: user.talon-gaze-ocr.timestamped_captures.TextRange, replacement: str)
+  Replaces onscreen text.
+user.revise_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the beginning and end of the provided text
+        and replaces it.
+user.revise_text_ending_with(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the end of the provided text and
+        replaces it from the caret.
+user.revise_text_starting_with(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Finds onscreen text that matches the beginning of the provided text
+        and replaces it until the caret.
+user.right_click_text(text: user.talon-gaze-ocr.timestamped_captures.TimestampedText)
+  Right-click on the provided on-screen text.
+user.show_ocr_overlay(type: str, near: Optional[user.talon-gaze-ocr.timestamped_captures.TimestampedText] = None)
+  Displays overlay over primary screen.
+
+        Reads nearby gaze when the near parameter is spoken.
+user.show_ocr_overlay_for_query(type: str, query: str = '')
+  Display overlay over primary screen, displaying the query.
+user.win_hide_info() -> None
+  Hides the window information window
+user.win_move(direction: Optional[Dict[str, bool]] = None) -> None
+  Move window in small increments in the given direction, until stopped
+user.win_move_absolute(x: float, y: float, region: Optional[Dict[str, bool]] = None) -> None
+  Move window to given absolute position, centered on the point indicated by the given region
+user.win_move_percent(percent: float, direction: Optional[Dict[str, bool]] = None) -> None
+  Move window some percentage of the current size
+user.win_move_pixels(distance: int, direction: Optional[Dict[str, bool]] = None) -> None
+  Move window some number of pixels
+user.win_move_to_pointer(region: Optional[Dict[str, bool]] = {'horizontal': False, 'vertical': False, 'diagonal': False})
+  Move window to pointer position, centered on the point indicated by the given region
+user.win_resize_absolute(target_width: float, target_height: float, region: Optional[Dict[str, bool]] = None) -> None
+  Size window to given absolute dimensions, optionally by stretching/shrinking in the direction indicated by the given region
+user.win_resize_percent(percent: float, direction: Optional[Dict[str, bool]] = None) -> None
+  Change window size by a percentage of current size
+user.win_resize_pixels(distance: int, direction: Optional[Dict[str, bool]] = None) -> None
+  Change window size by pixels
+user.win_resize_to_pointer(nd_direction: Dict[str, bool]) -> None
+  Stretch or shrink window to pointer position, centered on the point indicated by the given region
+user.win_revert() -> None
+  Restore current window's last remembered size and position
+user.win_show_info() -> None
+  Shows information about current window position and size
+user.win_shrink(direction: Optional[Dict[str, bool]] = None) -> None
+  Shrink window in small increments until stopped, optionally in the given direction
+user.win_snap_percent(percent: int) -> None
+  Center window and change size to given percentage of parent screen (in each direction)
+user.win_stop() -> None
+  Module action declaration for stopping current window move/resize operation
+user.win_stretch(direction: Optional[Dict[str, bool]] = None) -> None
+  Stretch window in small increments until stopped, optionally in the given direction
+user.win_test_bresenham(num: int) -> None
+  Test modified bresenham algo
+user.hud_get_configuration(title: str, default: Any = None) -> Any
+  Get a configuration setting from the HUD setting object
+user.hud_add_ability(id: str, image: str, colour: str, enabled: int, activated: int, image_offset_x: int = 0, image_offset_y: int = 0)
+  Add a HUD ability icon or update it
+user.hud_add_log(type: str, message: str)
+  Adds a log to the HUD
+user.hud_add_status_icon(id: str, image: str)
+  Add an unclickable icon to the status bar
+user.hud_clear_screen_regions(type: str, topic: str = None, _deprecated_update: Union[bool, int] = True)
+  Clear the screen regions in the given type, optionally by topic
+user.hud_create_button(text: str, callback: Callable[[], NoneType], image: str = '')
+  Create a button used in the Talon HUD
+user.hud_create_choices(choices_list: list[typing.Any], callback: Callable[[Any], NoneType], multiple: Union[bool, int] = False) -> user.talon_hud.content.typing.HudChoices
+  Creates a list of choices with a single list of dictionaries
+user.hud_create_screen_region(topic: str, colour: str = None, icon: str = '', title: str = '', hover_visibility: Union[bool, int] = False, x: int = 0, y: int = 0, width: int = 0, height: int = 0, relative_x: int = 0, relative_y: int = 0)
+  Create a HUD screen region, where by default it is active all over the available space and it is visible only on a hover
+user.hud_create_status_icon(topic: str, image: str, text: str = None, accessible_name: str = 'Status icon', callback: Callable[[], NoneType] = None) -> user.talon_hud.content.typing.HudStatusIcon
+  Create a status bar icon to be displayed in the status bar widget in the Talon HUD
+user.hud_create_status_option(icon_topic: str, default_option: user.talon_hud.content.typing.HudButton, activated_option: user.talon_hud.content.typing.HudButton)
+  Create an option entry to show in the options in the status bar
+user.hud_edit_log(prefix_split: str, throttle_remaining: int = 0, discard_remaining: int = 0, type: str = 'command')
+  Edits a log message to be split up into multiple with optional discarding of the remainder
+user.hud_publish_choices(choices: user.talon_hud.content.typing.HudChoices, title: str = '', content: str = '')
+  Publish choices to a choice panel
+user.hud_publish_content(content: str, topic: str = '', title: str = '', show: Union[bool, int] = True, buttons: list[user.talon_hud.content.typing.HudButton] = None, voice_commands: Any = None)
+  Publish a specific piece of content to a topic
+user.hud_publish_mouse_particle(type: str, colour: str = None, image: str = '', diameter: int = 10)
+  Create a particle to be shown on the screen overlay where the current mouse cursor is
+user.hud_publish_particle(type: str, colour: str = None, image: str = '', diameter: int = 10, pos_x: int = 0, pos_y: int = 0)
+  Publish a particle to be shown in the screen overlay
+user.hud_publish_screen_regions(type: str, regions: list[user.talon_hud.content.typing.HudScreenRegion], clear: Union[bool, int] = False)
+  Publish screen regions to widgets that can handle them, optionally clearing the type
+user.hud_publish_status_icon(topic: str, status_icon: user.talon_hud.content.typing.HudStatusIcon)
+  Publish an icon the status bar
+user.hud_publish_status_option(topic: str, status_option: user.talon_hud.content.typing.HudStatusOption)
+  Add an option entry to the status bar
+user.hud_remove_ability(id: str)
+  Remove a HUD ability icon
+user.hud_remove_status_icon(id: str)
+  Remove an icon to the status bar
+user.hud_remove_status_option(topic: str)
+  Remove an option entry to the status bar
+user.hud_show_throttled_logs(sleep_s: int = 0)
+  Sends the throttled log messages to be visualized after the optional sleep timeout
+user.hud_add_documentation(title: str, description: str, filename: str)
+  Add a file to the documentation panel of the Talon HUD
+user.hud_show_documentation(title: str = '')
+  Show the general documentation
+user.hud_unwatch_documentation_files()
+  Disable watching for changes in the documentation files for quicker development
+user.hud_watch_documentation_files()
+  Enable watching for changes in the documentation files for quicker development
+user.hud_activate_dwell_key()
+  Activate a toolbar item manually
+user.hud_create_virtual_key(action: Union[str, Callable], text: str = '', icon: str = '', colour: str = '', text_colour: str = '', x: int = 0, y: int = 0, width: int = -1, height: int = -1) -> dict
+  Create a virtual key to be used in a dwell toolbar or a virtual keyboard
+user.hud_deactivate_dwell_key()
+  Clear the currently selected toolbar item
+user.hud_register_dwell_toolbar(name: str, virtual_keys: list, dwell_ms: int = 750, layout_style: str = 'open', alignment: str = 'left', horizontal_key_amount: int = 3, vertical_key_amount: int = 5)
+  Register a toolbar that can be activated with dwell regions
+user.hud_set_dwell_toolbar(name: str = None, monitor: int = 0, visible: Union[bool, int] = True)
+  Show the dwell toolbar screen regions
+user.hud_set_dwell_toolbar_visibility(visible: Union[bool, int] = True)
+  Set the visibility of the current dwell toolbar
+user.hud_activate_focus_indicator()
+  Activate the focus indicator
+user.hud_deactivate_focus_indicator()
+  Deactivate the focus indicator
+user.hud_toggle_language(current_language: str = 'en_US')
+  Toggles the current language to another language
+user.hud_toolkit_lists()
+  Show available  lists to view for the Talon HUD
+user.hud_add_single_click_mic_toggle()
+  Add a single click toggle on the status bar
+user.hud_remove_single_click_mic_toggle()
+  Remove a single click toggle from the status bar
+user.hud_toggle_microphone()
+  Toggle the HUD microphone
+user.show_microphone_options()
+  Show the microphone options in a choice panel
+user.hud_determine_mode() -> str
+  Determine the current mode used for the status bar icons and the widget states
+user.hud_get_status_modes() -> list[str]
+  Get an ordered list of all the available modes that can be displayed in the status bar and other widget states
+user.hud_toggle_mode()
+  Toggle the current mode to a new mode
+user.hud_can_toggle_programming_language() -> bool
+  Check if we should be able to toggle the programming language from the status bar
+user.hud_get_available_languages()
+  Get the available programming languages inside of the HUD
+user.hud_get_programming_language() -> str
+  Get the programming language to be displayed in the status bar - By default tries to mimic knausj
+user.hud_toggle_programming_language()
+  Toggle the programming language manually in the status bar
+user.hud_toolkit_scope()
+  Start debugging the Talon scope in the Talon HUD
+user.hud_toolkit_speech()
+  Start displaying the phrase debugging tools
+user.hud_toolkit_debug_options()
+  Shows the content available in the debug menu of the HUD toolkit
+user.hud_toolkit_options()
+  Shows the content available in the HUD toolkit
+user.hud_activate_virtual_key()
+  Activate a virtual keyboard key manually
+user.hud_register_virtual_keyboard(name: str, virtual_keys: list, layout_style: str = 'full', alignment: str = 'top', horizontal_key_amount: int = 3, vertical_key_amount: int = 3)
+  Register a virtual keyboard that can be activated manually
+user.hud_set_virtual_keyboard(name: str = None, monitor: int = 0, visible: Union[bool, int] = True)
+  Show the virtual keyboard screen regions
+user.hud_set_virtual_keyboard_visibility(visible: Union[bool, int] = True)
+  Set the visibility of the current dwell toolbar
+user.hud_add_lazy_walkthrough(title: str, get_walkthrough: Callable[[], list[user.talon_hud.content.typing.HudWalkThroughStep]])
+  Add a walk through through a file
+user.hud_add_walkthrough(title: str, filename: str)
+  Add a walk through through a file
+user.hud_create_walkthrough(title: str, steps: list[user.talon_hud.content.typing.HudWalkThroughStep])
+  Create a walk through with all the required steps
+user.hud_create_walkthrough_step(content: str, context_hint: str = '', tags: list[str] = None, modes: list[str] = None, app: str = '', restore_callback: Callable[[Any, Any], NoneType] = None)
+  Create a step for a walk through
+user.hud_previous_walkthrough_step()
+  Skip the current walk through step
+user.hud_restore_walkthrough_step()
+  Restore the current walkthrough step if possible
+user.hud_show_walkthroughs()
+  Show all the currently available walk through options
+user.hud_skip_walkthrough_all()
+  Skip the current walk through step
+user.hud_skip_walkthrough_step()
+  Skip the current walk through step
+user.hud_start_walkthrough(title: str)
+  Starts a loaded in walk through
+user.hud_unwatch_walkthrough_files()
+  Disable watching for changes in the walkthrough files for quicker development
+user.hud_watch_walkthrough_files()
+  Enable watching for changes in the walkthrough files for quicker development
+user.hud_activate_choice(choice_string: str)
+  Activate a choice available on the screen
+user.hud_activate_choices(choice_string_list: list[str])
+  Activate multiple choices available on the screen
+user.hud_activate_enabled_voice_command(enabled_voice_command: str)
+  Activate a defined voice command attached to an enabled widget
+user.hud_activate_poller(topic: str)
+  Enables a poller and claims a widget
+user.hud_add_poller(topic: str, poller: user.talon_hud.content.poller.Poller, keep_alive: bool = False)
+  Add a content poller / listener to the HUD
+user.hud_blur()
+  Blur the keyboard focus from the HUD to the previously focused application
+user.hud_deactivate_poller(topic: str)
+  Disables a poller
+user.hud_decrease_widget_page(widget_id: str)
+  Decrease the content page of the widget if it has pages available
+user.hud_disable()
+  Disables the HUD
+user.hud_disable_id(id: str)
+  Disables a specific HUD element
+user.hud_enable()
+  Enables the HUD
+user.hud_enable_id(id: str)
+  Enables a specific HUD element
+user.hud_focus()
+  Focus the HUD for keyboard interaction
+user.hud_get_theme() -> user.talon_hud.theme.HeadUpDisplayTheme
+  Get the current theme object from the HUD
+user.hud_get_widget_pagination(widget_id: str) -> user.talon_hud.content.typing.HudContentPage
+  Get the pagination information of the widget
+user.hud_hide_context_menu()
+  Show the context menu for a specific widget id
+user.hud_increase_widget_page(widget_id: str)
+  Increase the content page of the widget if it has pages available
+user.hud_persist_preferences()
+  Saves the HUDs preferences
+user.hud_register_theme(theme_name: str, theme_dir: str)
+  Add a theme directory from outside of the HUD to the possible themes
+user.hud_remove_poller(topic: str)
+  Remove a content poller / listener to the HUD
+user.hud_set_auto_focus(auto_focus: Union[bool, int])
+  Set the widget focusing behavior to automatically focus on content publishing or not
+user.hud_set_inactive_visibility(visible: Union[bool, int] = True)
+  Sets the visibility of the Talon HUD when it is not needed ( for example for fullscreen video )
+user.hud_set_setup_mode(id: str, setup_mode: str)
+  Starts a setup mode which can change position
+user.hud_set_setup_mode_multi(ids: list[str], setup_mode: str)
+  Starts a setup mode which can change position for multiple widgets at the same time
+user.hud_set_visibility(visible: Union[bool, int] = True, pause_seconds: float = 0.05)
+  Set all the widgets' visibility without disabling them - Useful for toggling the HUD on and off in screenshots
+user.hud_set_widget_preference(id: str, property: str, value: Any)
+  Set a specific widget preference
+user.hud_show_context_menu(widget_id: str, pos_x: int, pos_y: int, buttons: list[user.talon_hud.content.typing.HudButton])
+  Show the context menu for a specific widget id
+user.hud_switch_theme(theme_name: str)
+  Switches the UI theme
+user.hud_toggle_focus()
+  Toggle the focus on or off the HUD
+user.hud_unwatch_directories()
+  Stop watching for changes in the theme directories
+user.hud_watch_directories()
+  Watch the theme and preferences directories for changes - This gives a performance penalty and should only be used during development
+user.hud_widget_focus(widget_id: str, node_id: int = -1)
+  Focus a specific widget available in the HUD
+user.hud_widget_options(widget_id: str)
+  Connect the widget to the context menu to show the options
+user.hud_widget_subscribe_topic(id: str, topic: str)
+  Subscribe to a specific type of content on a widget
+user.hud_widget_unsubscribe_topic(id: str, topic: str)
+  Unsubscribe from a specific type of content on a widget
+user.hud_internal_register(type: str, data: Any, name: str = None)
+  Used to register new instances of HeadUpDisplay, HeadUpDisplayContent etc. for managing between reloads caused by file updates
+user.mouse_helper_blob_picker(bounding_rectangle: talon.types.rect.Rect, min_gap_size: int = 5)
+  Attempts to find clickable elements within the given bounding rectangle, then
+        draws a labelled overlay allowing you to click or move the mouse to them.
+
+        See mouse_helper_calculate_relative_rect for how to get the bounding rectangle.
+user.mouse_helper_calculate_relative_rect(relative_rect_offsets: str, region: str = 'active_screen') -> talon.types.rect.Rect
+  Calculates a talon rectangle relative to the entire screen based on the given region
+        of interest and a set of offsets. Examples:
+
+            "0 0 -0 -0", "active_screen": Would indicate the entire active screen.
+            "10 20 30 40", "active_window": Would indicate the region between pixels (10, 20) and (30, 40)
+              on the currently focussed window.
+            "10 20 -30 40", "active_window": Would indicate the region between pixels (10, 20) and
+              the pixel 30 units from the right hand side of the window and 40 units from the top.
+user.mouse_helper_find_template_relative(template_path: str, xoffset: float = 0, yoffset: float = 0, region: Optional[talon.types.rect.Rect] = None) -> List[talon.types.rect.Rect]
+  Finds all matches for the given image template within the given region.
+
+        :param template_path: Filename of the image to find. Can be an absolute path or
+            if no '/' or '\' character is specified, it is relative to the image
+            templates directory.
+        :param xoffset: Amount to shift in the x direction relative to the
+            center of the template.
+        :param yoffset: Amount to shift in the y direction relative to the
+            center of the template.
+        :param region: The region to search for the template in. Either a screen relative
+            TalonRect (see mouse_helper_calculate_relative_rect) or None to just use the
+            active screen.
+user.mouse_helper_move_active_window_relative(xpos: str, ypos: str)
+  Positions the mouse relative to the active window
+user.mouse_helper_move_image_relative(template_path: str, disambiguator: Union[int, str] = 0, xoffset: float = 0, yoffset: float = 0, region: Optional[talon.types.rect.Rect] = None)
+  Moves the mouse relative to the template image given in template_path.
+
+        :param template_path: Filename of the image to find. Can be an absolute path or
+            if no '/' or '\' character is specified, it is relative to the image
+            templates directory.
+        :param disambiguator: If there are multiple matches, use this to indicate
+            which one you want to match. Matches are ordered left to right top to
+            bottom. If disambiguator is an integer then it's just an index into that list.
+            If it's the string "mouse" then it's the next match in the region to the right
+            and down from the mouse after shifting back the offset amount and up and left
+            half the size and width of the template. If it is "mouse_cycle" then if there
+            are no further matches it will attempt to start from the top of the screen again.
+            This is useful for iterating through rows in a table for example.
+        :param xoffset: Amount to shift in the x direction relative to the
+            center of the template.
+        :param yoffset: Amount to shift in the y direction relative to the
+            center of the template.
+        :param region: The region to search for the template in. Either a screen relative
+            TalonRect (see mouse_helper_calculate_relative_rect) or None to just use the
+            active screen.
+user.mouse_helper_move_relative(xdelta: float, ydelta: float)
+  Moves the mouse relative to its current position
+user.mouse_helper_position_restore()
+  Restores a saved mouse position
+user.mouse_helper_position_save()
+  Saves the mouse position to a global variable
+user.command_wizard_choose_option(option: int)
+  Chooses one of the command wizards
+user.command_wizard_hide()
+  Closes the command wizard UI
+user.command_wizard_show()
+  Brings up the command wizard UI
+user.marker_ui_hide()
+  Hides any visible marker UI
+user.marker_ui_mouse_move(label: str)
+  Moves the mouse cursor to the label corresponding to the given label
+user.marker_ui_show(rects: List[talon.types.rect.Rect])
+  Shows the given markers in the Marker UI. They can then be clicked or moved
+        to using other actions in this class.
+user.tag_game_handle_command(command: str)
+  Handles spoke TAG command
+user.tag_game_play()
+  Plays Talon Adventure Game (TAG)
+user.tag_game_stop()
+  Stops Talon Adventure Game (TAG)
