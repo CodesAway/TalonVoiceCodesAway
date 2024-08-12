@@ -14,6 +14,10 @@ from talon.skia.canvas import Canvas as SkiaCanvas
 
 mod = Module()
 mod.list("tag_game_command", desc="Commands for Talon Adventure Game")
+mod.list(
+    "tag_find_and_replace_commands",
+    "Find and Replace commands for Talon Adventure Game",
+)
 mod.tag("tag_game", "Playing Talon Adventure Game")
 
 ctx = Context()
@@ -41,19 +45,23 @@ class TalonAdventureGame:
         self.tag_playing = False
 
     # TODO: add optional parameter for the module to play
-    def show_game(self):
-        self.tag_playing = True
+    def show_game(self, talon_list, include_letters):
+        if talon_list:
+            self.commands.update(registry.lists[talon_list][0])
+            print(f"talon_list: {talon_list}")
+            print(registry.lists[talon_list])
 
-        self.commands.update(registry.lists["user.letter"][0])
-        # TODO: move to talon-list (so can read based on which module want to work on)
-        #  (load file based on which module playing)
-        self.commands["git stage"] = "Add git file contents to the staging area"
+        if include_letters or not talon_list:
+            self.commands.update(registry.lists["user.letter"][0])
 
         # TODO: use both commands and coresponding text (similiar to front / back of flashcard)
         self.commands_list = list(self.commands.keys())
+        # Makes a copy of all commands
+        # (ensures saying a command will not trigger it, such as when practicing, say incorrect command)
         ctx.lists["user.tag_game_command"] = self.commands_list
 
         self.set_random_command()
+        self.tag_playing = True
 
     def deactivate(self):
         self.tag_playing = False
@@ -85,7 +93,7 @@ class TalonAdventureGame:
             return
 
         paint: Paint = c.paint
-        paint.typeface = self.typeface
+        paint.typeface = self.mono_typeface
         # The min(width, height) is to not get gigantic size on portrait screens
         paint.textsize = round(min(c.width, c.height) / 8)
 
@@ -136,12 +144,18 @@ class TalonAdventureGame:
         self.canvas.freeze()
 
     def set_random_command(self):
-        last_command = self.last_command
+        if not self.commands_list:
+            actions.user.tag_game_stop()
+            app.notify(
+                "You've practiced all chosen commands. Thanks for playing Talon Adventure Game (TAG)"
+            )
+            return
 
-        while self.last_command == last_command:
-            self.last_command = self.commands_list[
-                random.randrange(len(self.commands_list))
-            ]
+        # TODO: instead of getting random, sort initial list and iterate like queue
+        # This way, can add chain of commands to practice in order
+        index = random.randrange(len(self.commands_list))
+        self.last_command = self.commands_list[index]
+        del self.commands_list[index]
         self.redraw()
 
     def handle_command(self, command: str):
@@ -159,11 +173,11 @@ app.register("ready", tag.setup)
 
 @mod.action_class
 class Actions:
-    def tag_game_play():
+    def tag_game_play(talon_list: str = "", include_letters: bool = True):
         """Plays Talon Adventure Game (TAG)"""
         tag.deactivate()
         tag.setup()
-        tag.show_game()
+        tag.show_game(talon_list, include_letters)
 
         ctx.tags = ["user.tag_game"]
 

@@ -1,1 +1,6 @@
+# TODO: support passing in list (use capture which maps from name to talon list name)
+# (change "test" to this capture)
+# (using a capture also allows the user to specify their own lists to practice)
 ^tag game play$:                                user.tag_game_play()
+^tag game play test$:                           user.tag_game_play("user.tag_find_and_replace_commands")
+^tag game play test only$:                      user.tag_game_play("user.tag_find_and_replace_commands", false)
