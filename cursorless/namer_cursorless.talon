@@ -28,3 +28,8 @@ namer copy <user.text> [with] <user.cursorless_target>:
 namer make <user.text> [with] <user.cursorless_target>:
     snip = user.cursorless_get_text(cursorless_target)
     user.namer_make_snippet(text, snip)
+
+# TODO: add other cursorless stuff
+namer peek {user.namer_variable} <user.cursorless_destination>:
+    value = user.namer_get_variable(namer_variable)
+    user.cursorless_insert(cursorless_destination, value)
