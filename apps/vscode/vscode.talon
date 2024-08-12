@@ -38,6 +38,9 @@ terminal open:                                  user.vscode("workbench.action.te
 terminal close:                                 user.vscode("workbench.action.terminal.kill")
 terminal close all:                             user.vscode("workbench.action.terminal.killAll")
 
+# Can also use Cursorless `follow <target>`
+link open:                                      user.vscode("editor.action.openLink")
+
 case switch:                                    user.find_toggle_match_by_case()
 regex switch:                                   user.find_toggle_match_by_regex()
 

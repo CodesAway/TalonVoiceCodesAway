@@ -13,3 +13,4 @@ settings():
     imgui.dark_mode = true
     # Used by andreas_talon/analyze_phrase/busage.py
     # user.pretty_print_phrase = true
+    user.ocr_dark_background_debug_color = "33b2cd"

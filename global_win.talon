@@ -10,9 +10,12 @@ os: windows
 # None is always microphone #1
 # (allows turning off mic when watching video to prevent accidental wake up)
 # (can click mic icon in Talon HUD to set back to System Default)
-mic none please:                                user.microphone_select(1)
+mic none please:                                sound.set_microphone("None")
 # System Default is always microphone #2
-mic default:                                    user.microphone_select(2)
+mic default:                                    sound.set_microphone("System Default")
+
+# TODO: add button to toggle between mute and regular for Talon mic
+key(ctrl-alt-space):                            user.hud_toggle_microphone()
 
 # Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
 # (has other edit commands)
