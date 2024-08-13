@@ -79,3 +79,8 @@ search exclude [<user.text>]:
     user.vscode("search.action.focusFilesToExclude")
     sleep(100ms)
     insert(text or "")
+
+git push <user.text>:
+    user.vscode("git.push")
+    sleep(100ms)
+    insert(text or "")
