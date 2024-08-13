@@ -7,4 +7,6 @@ os: windows
 (view | edit) entry:                            key(enter)
 delete entry:                                   key(delete)
 open (earl | url | link):                       key(ctrl-u)
+link open:                                      key(ctrl-u)
 copy (earl | url | link):                       key(ctrl-shift-u)
+link copy:                                      key(ctrl-shift-u)
