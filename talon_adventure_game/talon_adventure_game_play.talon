@@ -2,7 +2,7 @@ tag: user.tag_game
 # Intentionally added to help ensure commands take priority (so don't run command for real)
 mode: command
 -
-^tag game stop$:                                user.tag_game_stop()
+^tag stop$:                                     user.tag_game_stop()
 {user.tag_game_command}:                        user.tag_game_handle_command(tag_game_command)
 
 # Handle commands specially when required (couldn't figure out how to otherwise match)
