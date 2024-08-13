@@ -1,4 +1,7 @@
+import json
+import os.path
 import random
+from dataclasses import asdict, dataclass
 
 from talon import (
     Context,
@@ -33,6 +36,39 @@ def tag_game_module(m) -> str:
 ctx = Context()
 
 
+def is_non_empty_str(value: any):
+    return value and isinstance(value, str)
+
+
+@dataclass
+class TAGElement:
+    name: str
+    description: str
+    commands: list[str] = (
+        None  # None unless represents a flow / chain of commands (specified in JSON)
+    )
+
+    def __post_init__(self):
+        if not is_non_empty_str(self.name):
+            raise TypeError(f"name must be a non-empty str, yet has value: {self.name}")
+
+        if not is_non_empty_str(self.description):
+            raise TypeError(
+                f"description of '{self.name}' must be a non-empty str, yet has value: {self.description}"
+            )
+
+        if self.commands is not None:
+            if not isinstance(self.commands, list):
+                raise TypeError(
+                    f"commands of '{self.name}' should be an optional list, yet has value: {self.commands}"
+                )
+
+            if not all(is_non_empty_str(e) for e in self.commands):
+                raise TypeError(
+                    f"commands of '{self.name}' should be an optional list[str] with non-empty values, yet has value: {self.commands}"
+                )
+
+
 # Reference: flex-mouse-grid\flex_mouse_grid.py
 # Reference: community\core\mouse_grid\mouse_grid.py
 class TalonAdventureGame:
@@ -54,22 +90,51 @@ class TalonAdventureGame:
 
         self.tag_playing = False
 
-    def show_game(self, talon_list, include_letters):
+    def show_game(self, talon_list: str, include_letters: bool):
         if talon_list:
-            self.commands.update(registry.lists[talon_list][0])
-            print(f"talon_list: {talon_list}")
-            print(registry.lists[talon_list])
+            # TODO: optionally support having multiple lists / json defined using "|" as delimiter
+            # Could also allow referencing other map keys from the tag_game_module.talon-list
+            # (so could specify once and then combine to practice several together)
+            if talon_list.endswith(".json"):
+                cwd = os.path.dirname(os.path.realpath(__file__))
+                pathname = os.path.join(cwd, os.path.expandvars(talon_list))
+                with open(pathname) as file:
+                    json_commands = json.load(file)
 
-        if include_letters or not talon_list:
+                print("Keys:")
+                for key, value in json_commands.items():
+                    print(f"{key} -> {value}")
+                    TAGElement
+                    element = TAGElement(key, **value)
+                    print(element)
+                    print(asdict(element))
+
+                # print()
+                # print(json_commands)
+                # print(json_commands["flow1"]["description"])
+                # print(json_commands["flow1"].get("commands"))
+                # print(type(json_commands["flow1"].get("commands")))
+                # print(json_commands["command"]["description"])
+                # # Will be NONE if doesn't have commands
+                # print(json_commands["command"].get("commands"))
+                # print(type(json_commands["command"].get("commands")))
+                # print(json_commands["command"].get("commands") is None)
+            else:
+                self.commands.update(registry.lists[talon_list][0])
+                print(f"talon_list: {talon_list}")
+                print(registry.lists[talon_list])
+
+        if include_letters or not self.commands:
             self.commands.update(registry.lists["user.letter"][0])
 
         # TODO: use both commands and coresponding text (similiar to front / back of flashcard)
         self.commands_list = list(self.commands.keys())
         # Makes a copy of all commands
-        # (ensures saying a command will not trigger it, such as when practicing, say incorrect command)
+        # (ensures saying a command will not trigger it, such as when practicing and say incorrect command)
         ctx.lists["user.tag_game_command"] = self.commands_list
+        random.shuffle(self.commands_list)
 
-        self.set_random_command()
+        self.set_next_command()
         self.tag_playing = True
 
     def deactivate(self):
@@ -118,7 +183,6 @@ class TalonAdventureGame:
 
         x = c.x + c.width / 2 - rect.x - rect.width / 2
         y = c.y + c.height / 2 + height / 2 + self.bottom_border / 2
-        # actions.user.mouse_move_center_active_window()
 
         border_size = paint.textsize / 5
 
@@ -152,26 +216,22 @@ class TalonAdventureGame:
 
         self.canvas.freeze()
 
-    def set_random_command(self):
+    def set_next_command(self):
         if not self.commands_list:
             actions.user.tag_game_stop()
             app.notify(
-                "You've practiced all chosen commands. Thanks for playing Talon Adventure Game (TAG)"
+                "Practice complete",
+                body="Thanks for playing Talon Adventure Game (TAG)!",
             )
             return
 
-        # TODO: instead of getting random, sort initial list and iterate like queue
-        # This way, can add chain of commands to practice in order
-        index = random.randrange(len(self.commands_list))
-        self.last_command = self.commands_list[index]
-        del self.commands_list[index]
+        self.last_command = self.commands_list[-1]
+        del self.commands_list[-1]
         self.redraw()
 
     def handle_command(self, command: str):
         if command == self.last_command:
-            # command_description = self.commands[command]
-            # actions.app.notify(f"Command for '{command_description}'")
-            self.set_random_command()
+            self.set_next_command()
         else:
             actions.app.notify(f"Incorrect command '{command}'. Please try again.")
 
