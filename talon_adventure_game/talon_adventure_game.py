@@ -13,12 +13,22 @@ from talon.skia import Paint, Rect
 from talon.skia.canvas import Canvas as SkiaCanvas
 
 mod = Module()
-mod.list("tag_game_command", desc="Commands for Talon Adventure Game")
+mod.list("tag_game_command", "Commands for Talon Adventure Game")
+mod.list(
+    "tag_game_module",
+    "Modules for Talon Adventure Game",
+)
 mod.list(
     "tag_find_and_replace_commands",
     "Find and Replace commands for Talon Adventure Game",
 )
 mod.tag("tag_game", "Playing Talon Adventure Game")
+
+
+@mod.capture(rule="{user.tag_game_module}")
+def tag_game_module(m) -> str:
+    return m.tag_game_module
+
 
 ctx = Context()
 
@@ -44,7 +54,6 @@ class TalonAdventureGame:
 
         self.tag_playing = False
 
-    # TODO: add optional parameter for the module to play
     def show_game(self, talon_list, include_letters):
         if talon_list:
             self.commands.update(registry.lists[talon_list][0])
