@@ -1,7 +1,8 @@
 import json
 import os.path
 import random
-from dataclasses import asdict, dataclass
+from collections import deque
+from dataclasses import dataclass
 
 from talon import (
     Context,
@@ -83,14 +84,16 @@ class TalonAdventureGame:
         self.text_color = "33b2cd"  # Amy's blue color
 
         self.last_command = ""
-        self.commands: dict[str, str] = dict()
-        self.commands_list: list[str]
+        self.commands: set[str] = set()
+        self.commands_deque: deque[TAGElement] = deque()
+
         self.row_height = 0
         self.bottom_border = 0
 
         self.tag_playing = False
 
     def show_game(self, talon_list: str, include_letters: bool):
+        commands_list: list[TAGElement] = []
         if talon_list:
             # TODO: optionally support having multiple lists / json defined using "|" as delimiter
             # Could also allow referencing other map keys from the tag_game_module.talon-list
@@ -101,44 +104,35 @@ class TalonAdventureGame:
                 with open(pathname) as file:
                     json_commands = json.load(file)
 
-                print("Keys:")
                 for key, value in json_commands.items():
-                    print(f"{key} -> {value}")
-                    TAGElement
                     element = TAGElement(key, **value)
-                    print(element)
-                    print(asdict(element))
-
-                # print()
-                # print(json_commands)
-                # print(json_commands["flow1"]["description"])
-                # print(json_commands["flow1"].get("commands"))
-                # print(type(json_commands["flow1"].get("commands")))
-                # print(json_commands["command"]["description"])
-                # # Will be NONE if doesn't have commands
-                # print(json_commands["command"].get("commands"))
-                # print(type(json_commands["command"].get("commands")))
-                # print(json_commands["command"].get("commands") is None)
+                    commands_list.append(element)
+                    self.commands.add(key)
             else:
-                self.commands.update(registry.lists[talon_list][0])
-                print(f"talon_list: {talon_list}")
-                print(registry.lists[talon_list])
+                talon_list_dict = registry.lists[talon_list][0]
+                self.commands.update(talon_list_dict.keys())
+                for key, value in talon_list_dict.items():
+                    commands_list.append(TAGElement(key, value))
 
         if include_letters or not self.commands:
-            self.commands.update(registry.lists["user.letter"][0])
+            letters = registry.lists["user.letter"][0]
+            self.commands.update(letters.keys())
+            for key, value in letters.items():
+                commands_list.append(TAGElement(key, value))
 
         # TODO: use both commands and coresponding text (similiar to front / back of flashcard)
-        self.commands_list = list(self.commands.keys())
         # Makes a copy of all commands
         # (ensures saying a command will not trigger it, such as when practicing and say incorrect command)
-        ctx.lists["user.tag_game_command"] = self.commands_list
-        random.shuffle(self.commands_list)
+        ctx.lists["user.tag_game_command"] = self.commands
+        random.shuffle(commands_list)
+        self.commands_deque = deque(commands_list)
 
         self.set_next_command()
         self.tag_playing = True
 
     def deactivate(self):
         self.tag_playing = False
+        self.commands_deque.clear()
         self.commands.clear()
         self.last_command = ""
 
@@ -217,7 +211,7 @@ class TalonAdventureGame:
         self.canvas.freeze()
 
     def set_next_command(self):
-        if not self.commands_list:
+        if not self.commands_deque:
             actions.user.tag_game_stop()
             app.notify(
                 "Practice complete",
@@ -225,8 +219,7 @@ class TalonAdventureGame:
             )
             return
 
-        self.last_command = self.commands_list[-1]
-        del self.commands_list[-1]
+        self.last_command = self.commands_deque.popleft().name
         self.redraw()
 
     def handle_command(self, command: str):
