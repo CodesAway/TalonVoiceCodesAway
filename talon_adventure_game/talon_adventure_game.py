@@ -107,7 +107,11 @@ class TalonAdventureGame:
                 for key, value in json_commands.items():
                     element = TAGElement(key, **value)
                     commands_list.append(element)
+                    # TODO: always add key? (even if have commands...shouldn't hurt)
                     self.commands.add(key)
+
+                    if element.commands:
+                        self.commands.update(element.commands)
             else:
                 talon_list_dict = registry.lists[talon_list][0]
                 self.commands.update(talon_list_dict.keys())
@@ -219,7 +223,16 @@ class TalonAdventureGame:
             )
             return
 
-        self.last_command = self.commands_deque.popleft().name
+        last_element = self.commands_deque.popleft()
+
+        if last_element.commands:
+            # Push each command (push in reverse order to maintain order of commands, since push like stack)
+            for command in reversed(last_element.commands):
+                self.commands_deque.appendleft(TAGElement(command, command))
+
+            last_element = self.commands_deque.popleft()
+
+        self.last_command = last_element.name
         self.redraw()
 
     def handle_command(self, command: str):
