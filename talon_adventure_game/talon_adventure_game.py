@@ -3,6 +3,7 @@ import os.path
 import random
 from collections import deque
 from dataclasses import dataclass
+from operator import attrgetter
 
 from talon import (
     Context,
@@ -44,18 +45,19 @@ def is_non_empty_str(value: any):
 @dataclass
 class TAGElement:
     name: str
-    description: str
-    commands: list[str] = (
-        None  # None unless represents a flow / chain of commands (specified in JSON)
-    )
+    display_text: str
+    is_command: bool = False
+
+    # None unless represents a flow / chain of commands (specified in JSON)
+    commands: list[str] = None
 
     def __post_init__(self):
         if not is_non_empty_str(self.name):
             raise TypeError(f"name must be a non-empty str, yet has value: {self.name}")
 
-        if not is_non_empty_str(self.description):
+        if not is_non_empty_str(self.display_text):
             raise TypeError(
-                f"description of '{self.name}' must be a non-empty str, yet has value: {self.description}"
+                f"display_text of '{self.name}' must be a non-empty str, yet has value: {self.display_text}"
             )
 
         if self.commands is not None:
@@ -70,6 +72,53 @@ class TAGElement:
                 )
 
 
+def calculate_bottom_border(paint: Paint):
+    """Calculates bottom border used for letters which appear below baseline"""
+    # Workaround for paint.measure_text, which doesn't factor this in
+    letters = ["g", "j", "p", "q", "y"]
+    bottom_border = 0
+
+    for letter in letters:
+        rect: Rect = paint.measure_text(letter)[1]
+        bottom_border = max(bottom_border, rect.y + rect.height)
+
+    return bottom_border
+
+
+def split_text_into_lines(text: str, paint: Paint, max_line_width: int) -> list[str]:
+    # Reference: https://github.com/chaosparrot/talon_hud/blob/master/utils.py -> layout_rich_text
+    # TODO: handle if single word is longer than max_line_width
+
+    # m_char_width = paint.measure_text("m")[1].width
+    # char_count = math.floor(max_line_width / m_char_width)
+    # print(f"c.width: {c.width}")
+    # print(f"char_count: {char_count}")
+    # char_count = 30
+
+    words = text.split()
+
+    if len(words) == 1:
+        return [text]
+
+    current_words = []
+    lines = []
+
+    for word in words:
+        current_words.append(word)
+        width = paint.measure_text(" ".join(current_words))[1].width
+
+        if width > max_line_width:
+            # Last word made too long
+            current_words.pop()
+            lines.append(" ".join(current_words))
+            current_words = [word]
+
+    # Add final line
+    lines.append(" ".join(current_words))
+
+    return lines
+
+
 # Reference: flex-mouse-grid\flex_mouse_grid.py
 # Reference: community\core\mouse_grid\mouse_grid.py
 class TalonAdventureGame:
@@ -78,12 +127,15 @@ class TalonAdventureGame:
         self.canvas: Canvas = None
 
         self.typeface = "arial"
-        self.mono_typeface = "consolas"
+        self.command_typeface = "consolas"
 
         self.background_color = "663399"  # Rebecca purple
-        self.text_color = "33b2cd"  # Amy's blue color
+        self.text_color = "ffffff"  # Amy's blue color
 
-        self.last_command = ""
+        self.command_background_color = "663399"  # Rebecca purple
+        self.command_text_color = "33b2cd"  # Amy's blue color
+
+        self.last_element: TAGElement = None
         self.commands: set[str] = set()
         self.commands_deque: deque[TAGElement] = deque()
 
@@ -104,25 +156,42 @@ class TalonAdventureGame:
                 with open(pathname) as file:
                     json_commands = json.load(file)
 
+                value: dict[str, any]
                 for key, value in json_commands.items():
+                    if value.get("description"):
+                        description = value["description"]
+                        # self.commands.add(description)
+                        del value["description"]
+                        value["display_text"] = description
+
                     element = TAGElement(key, **value)
                     commands_list.append(element)
-                    # TODO: always add key? (even if have commands...shouldn't hurt)
+                    # Add key to prevent accidental commands
                     self.commands.add(key)
 
                     if element.commands:
                         self.commands.update(element.commands)
+                    else:
+                        # Add practice for "flip side" display command and say command
+                        commands_list.append(TAGElement(key, key, True))
             else:
                 talon_list_dict = registry.lists[talon_list][0]
                 self.commands.update(talon_list_dict.keys())
+                # self.commands.update(talon_list_dict.values())
                 for key, value in talon_list_dict.items():
                     commands_list.append(TAGElement(key, value))
+                    commands_list.append(TAGElement(key, key, True))
 
         if include_letters or not self.commands:
             letters = registry.lists["user.letter"][0]
             self.commands.update(letters.keys())
+            # self.commands.update(letters.values())
             for key, value in letters.items():
-                commands_list.append(TAGElement(key, value))
+                display_text = "letter " + value
+                # TODO: if display text has invalid characters (such as '(' or ')' will show warning in Talon log)
+                # self.commands.update(display_text)
+                commands_list.append(TAGElement(key, display_text))
+                commands_list.append(TAGElement(key, key, True))
 
         # TODO: use both commands and coresponding text (similiar to front / back of flashcard)
         # Makes a copy of all commands
@@ -138,7 +207,7 @@ class TalonAdventureGame:
         self.tag_playing = False
         self.commands_deque.clear()
         self.commands.clear()
-        self.last_command = ""
+        self.last_element = None
 
         self.redraw()
 
@@ -146,63 +215,94 @@ class TalonAdventureGame:
         if self.canvas:
             self.canvas.freeze()
 
-    @staticmethod
-    def calculate_bottom_border(paint: Paint):
-        """Calculates bottom border used for letters which appear below baseline"""
-        # Workaround for paint.measure_text, which doesn't factor this in
-        letters = ["g", "j", "p", "q", "y"]
-        bottom_border = 0
-
-        for letter in letters:
-            rect: Rect = paint.measure_text(letter)[1]
-            bottom_border = max(bottom_border, rect.y + rect.height)
-
-        return bottom_border
-
     # Reference: community\core\screens\screens.py -> show_screen_number,
     def on_draw(self, c: SkiaCanvas):
         if not self.tag_playing:
             return
 
         paint: Paint = c.paint
-        paint.typeface = self.mono_typeface
+        # TODO: make setting?
+        # paint.font.embolden = True
         # The min(width, height) is to not get gigantic size on portrait screens
         paint.textsize = round(min(c.width, c.height) / 8)
+        border_size = paint.textsize / 5
 
         if not self.row_height:
-            self.bottom_border = self.calculate_bottom_border(paint)
+            paint.typeface = self.typeface
+            bottom_border = calculate_bottom_border(paint)
             sample: Rect = paint.measure_text("A")[1]
-            self.row_height = sample.height
+            row_height = sample.height
 
-        text = self.last_command
+            paint.typeface = self.command_typeface
+            command_bottom_border = calculate_bottom_border(paint)
+            sample: Rect = paint.measure_text("A")[1]
+            command_row_height = sample.height
 
-        rect: Rect = paint.measure_text(text)[1]
-        height = self.row_height
+            self.bottom_border = (
+                bottom_border
+                if bottom_border > command_bottom_border
+                else command_bottom_border
+            )
+            self.row_height = (
+                row_height if row_height > command_row_height else command_row_height
+            )
 
-        x = c.x + c.width / 2 - rect.x - rect.width / 2
+        paint.typeface = (
+            self.command_typeface if self.last_element.is_command else self.typeface
+        )
+
+        text = self.last_element.display_text
+
+        # TODO: split text into lines based on width (word wrapping to handle long lines)
+        max_line_width = c.width - 2 * border_size
+
+        lines = split_text_into_lines(text, paint, max_line_width)
+        line_spacing = border_size
+
+        between_lines_height = self.bottom_border + line_spacing
+        height = self.row_height * len(lines) + between_lines_height * (len(lines) - 1)
+
+        # rect: Rect = paint.measure_text(text)[1]
+        rects: list[Rect] = [paint.measure_text(line)[1] for line in lines]
+        min_x = min(rects, key=attrgetter("x")).x
+        max_width = max(rects, key=attrgetter("width")).width
+
+        # x = c.x + c.width / 2 - rect.x - rect.width / 2
+        x = c.x + c.width / 2 - min_x - max_width / 2
         y = c.y + c.height / 2 + height / 2 + self.bottom_border / 2
-
-        border_size = paint.textsize / 5
 
         card_rect = Rect(
             x - border_size,
             y - border_size - height,
-            rect.width + 2 * border_size,
+            # rect.width + 2 * border_size,
+            max_width + 2 * border_size,
             height + self.bottom_border + 2 * border_size,
         )
 
         paint.style = paint.Style.FILL
-        paint.color = self.background_color
+        paint.color = (
+            self.command_background_color
+            if self.last_element.is_command
+            else self.background_color
+        )
         c.draw_rect(card_rect)
 
         paint.style = paint.Style.FILL
-        paint.color = self.text_color
-        c.draw_text(text, x, y)
+        paint.color = (
+            self.command_text_color if self.last_element.is_command else self.text_color
+        )
+
+        for index, line in enumerate(lines):
+            c.draw_text(
+                line,
+                x,
+                y - (len(lines) - 1 - index) * (self.row_height + between_lines_height),
+            )
 
     def setup(self):
         # TODO: Initialize via settings
         self.typeface = "arial"
-        self.mono_typeface = "consolas"
+        self.command_typeface = "consolas"
 
         self.screen = actions.user.screens_get_by_number(1)
 
@@ -228,18 +328,18 @@ class TalonAdventureGame:
         if last_element.commands:
             # Push each command (push in reverse order to maintain order of commands, since push like stack)
             for command in reversed(last_element.commands):
-                self.commands_deque.appendleft(TAGElement(command, command))
+                self.commands_deque.appendleft(TAGElement(command, command, True))
 
             last_element = self.commands_deque.popleft()
 
-        self.last_command = last_element.name
+        self.last_element = last_element
         self.redraw()
 
     def handle_command(self, command: str):
-        if command == self.last_command:
+        if self.last_element and command == self.last_element.name:
             self.set_next_command()
         else:
-            actions.app.notify(f"Incorrect command '{command}'. Please try again.")
+            app.notify(f"Incorrect command '{command}'. Please try again.")
 
 
 tag = TalonAdventureGame()
