@@ -14,8 +14,12 @@ mic none please:                                sound.set_microphone("None")
 # System Default is always microphone #2
 mic default:                                    sound.set_microphone("System Default")
 
+sub show:                                       user.show_subtitles()
+sub hide:                                       user.hide_subtitles()
+
 # TODO: add button to toggle between mute and regular for Talon mic
 key(ctrl-alt-space):                            user.hud_toggle_microphone()
+key(ctrl-shift-space):                          user.screenshot()
 
 # Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
 # (has other edit commands)

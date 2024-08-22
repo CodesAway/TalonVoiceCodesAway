@@ -6,6 +6,11 @@ from talon.scripting.types import SettingValue
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
 
+mod.tag(
+    "codesaway_subtitles_show",
+    "Show custom subtitles using CodesAway settings",
+)
+
 ctx = Context()
 ctx.lists["user.codesaway_symbol_key"] = {
     "semi": ";",
@@ -42,5 +47,13 @@ class Actions:
         )
 
     def get_setting(setting_name: str) -> SettingValue:
-        """Get setting with specified name"""
+        """Gets setting with specified name"""
         return settings.get(setting_name)
+
+    def show_subtitles():
+        """Shows subtitles"""
+        ctx.tags = ["user.codesaway_subtitles_show"]
+
+    def hide_subtitles():
+        """Hides subtitles"""
+        ctx.tags = []
