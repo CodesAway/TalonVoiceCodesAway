@@ -14,77 +14,29 @@ hunt all text:                                  Triggers find across project (se
 hunt case:                                      Toggles find match by case sensitivity
 hunt word:                                      Toggles find match by whole words
 hunt expression:                                Toggles find match by regex
-# replace this [<user.text>]: user.replace(text or "")
-# replace all: user.replace_everywhere("")
-# replace <user.text> all: user.replace_everywhere(text)
-# replace confirm that: user.replace_confirm()
-# replace confirm all: user.replace_confirm_all()
-
-# #quick replace commands, modeled after jetbrains
-# clear last <user.text> [over]:
-#     user.select_previous_occurrence(text)
-#     sleep(100ms)
-#     edit.delete()
-# clear next <user.text> [over]:
-#     user.select_next_occurrence(text)
-#     sleep(100ms)
-#     edit.delete()
-# clear last clip:
-#     user.select_previous_occurrence(clip.text())
-#     edit.delete()
-# clear next clip:
-#     user.select_next_occurrence(clip.text())
-#     sleep(100ms)
-#     edit.delete()
-# comment last <user.text> [over]:
-#     user.select_previous_occurrence(text)
-#     sleep(100ms)
-#     code.toggle_comment()
-# comment last clip:
-#     user.select_previous_occurrence(clip.text())
-#     sleep(100ms)
-#     code.toggle_comment()
-# comment next <user.text> [over]:
-#     user.select_next_occurrence(text)
-#     sleep(100ms)
-#     code.toggle_comment()
-# comment next clip:
-#     user.select_next_occurrence(clip.text())
-#     sleep(100ms)
-#     code.toggle_comment()
-# go last <user.text> [over]:
-#     user.select_previous_occurrence(text)
-#     sleep(100ms)
-#     edit.right()
-# go last clip:
-#     user.select_previous_occurrence(clip.text())
-#     sleep(100ms)
-#     edit.right()
-# go next <user.text> [over]:
-#     user.select_next_occurrence(text)
-#     edit.right()
-# go next clip:
-#     user.select_next_occurrence(clip.text())
-#     edit.right()
-# paste last <user.text> [over]:
-#     user.select_previous_occurrence(text)
-#     sleep(100ms)
-#     edit.right()
-#     edit.paste()
-# paste next <user.text> [over]:
-#     user.select_next_occurrence(text)
-#     sleep(100ms)
-#     edit.right()
-#     edit.paste()
-# replace last <user.text> [over]:
-#     user.select_previous_occurrence(text)
-#     sleep(100ms)
-#     edit.paste()
-# replace next <user.text> [over]:
-#     user.select_next_occurrence(text)
-#     sleep(100ms)
-#     edit.paste()
-# select last <user.text> [over]: user.select_previous_occurrence(text)
-# select next <user.text> [over]: user.select_next_occurrence(text)
-# select last clip: user.select_previous_occurrence(clip.text())
-# select next clip: user.select_next_occurrence(clip.text())
+replace this:                                   Replaces in the active editor
+replace this text:                              Replaces in the active editor (searching for text)
+replace all:                                    Replaces in the entire project
+replace text all:                               Replaces in the entire project (searching for text)
+replace confirm that:                           Confirm replace at current position
+replace confirm all:                            Confirm replace all
+clear last text:                                Deletes the previous occurrence of the text
+clear next text:                                Deletes the next occurrence of the text
+clear last clip:                                Deletes the previous occurrence of the clipboard text
+clear next clip:                                Deletes the next occurrence of the clipboard text
+comment last text:                              Toggle comments of the line with the previous occurrence of the text
+comment last clip:                              Toggle comments of the line with the previous occurrence of the clipboard text
+comment next text:                              Toggle comments of the line with the next occurrence of the text
+comment next clip:                              Toggle comments of the line with the next occurrence of the clipboard text
+go last text:                                   Moves cursor to after the previous occurrence of the text
+go last clip:                                   Moves cursor to after the previous occurrence of the clipboard text
+go next text:                                   Moves cursor to after the next occurrence of the text
+go next clip:                                   Moves cursor to after the next occurrence of the clipboard text
+paste last text:                                Pastes clipboard after the previous occurrence of the text
+paste next text:                                Pastes clipboard after the next occurrence of the text
+replace last text:                              Replaces the previous occurrence of the text with the clipboard text
+replace next text:                              Replaces the next occurrence of the text with the clipboard text
+select last text:                               Selects the previous occurrence of the text
+select next text:                               Selects the next occurrence of the text
+select last clip:                               Selects the previous occurrence of the clipboard text
+select next clip:                               Selects the next occurrence of the clipboard text

@@ -3,6 +3,7 @@ tag: user.tag_game
 mode: command
 -
 ^tag stop$:                                     user.tag_game_stop()
+^tag hint$:                                     user.tag_game_hint()
 {user.tag_game_command}:                        user.tag_game_handle_command(tag_game_command)
 
 # Handle commands specially when required (couldn't figure out how to otherwise match)

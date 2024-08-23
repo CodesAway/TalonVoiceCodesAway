@@ -143,6 +143,7 @@ class TalonAdventureGame:
         self.bottom_border = 0
 
         self.tag_playing = False
+        self.tag_hint = False
 
     def show_game(self, talon_list: str, include_letters: bool):
         commands_list: list[TAGElement] = []
@@ -258,6 +259,13 @@ class TalonAdventureGame:
 
         lines = split_text_into_lines(text, paint, max_line_width)
         line_spacing = border_size
+        hint_lines = []
+
+        if self.tag_hint and not self.last_element.is_command:
+            hint_lines = split_text_into_lines(
+                "`" + self.last_element.name + "`", paint, max_line_width
+            )
+            lines = hint_lines + lines
 
         between_lines_height = self.bottom_border + line_spacing
         height = self.row_height * len(lines) + between_lines_height * (len(lines) - 1)
@@ -288,11 +296,17 @@ class TalonAdventureGame:
         c.draw_rect(card_rect)
 
         paint.style = paint.Style.FILL
-        paint.color = (
-            self.command_text_color if self.last_element.is_command else self.text_color
-        )
 
         for index, line in enumerate(lines):
+            if index < len(hint_lines):
+                paint.color = self.command_text_color
+            else:
+                paint.color = (
+                    self.command_text_color
+                    if self.last_element.is_command
+                    else self.text_color
+                )
+
             c.draw_text(
                 line,
                 x,
@@ -337,6 +351,7 @@ class TalonAdventureGame:
 
     def handle_command(self, command: str):
         if self.last_element and command == self.last_element.name:
+            self.tag_hint = False
             self.set_next_command()
         else:
             app.notify(f"Incorrect command '{command}'. Please try again.")
@@ -360,6 +375,11 @@ class Actions:
         """Stops Talon Adventure Game (TAG)"""
         tag.deactivate()
         ctx.tags = []
+
+    def tag_game_hint():
+        """Shows command corresponding to description"""
+        tag.tag_hint = not tag.tag_hint
+        tag.redraw()
 
     def tag_game_handle_command(command: str):
         """Handles spoke TAG command"""
