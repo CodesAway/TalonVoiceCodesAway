@@ -6,11 +6,6 @@ from talon.scripting.types import SettingValue
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
 
-mod.tag(
-    "codesaway_subtitles_show",
-    "Show custom subtitles using CodesAway settings",
-)
-
 ctx = Context()
 ctx.lists["user.codesaway_symbol_key"] = {
     "semi": ";",
@@ -18,6 +13,11 @@ ctx.lists["user.codesaway_symbol_key"] = {
     "round": "(",
     "right round": ")",
 }
+
+ctx_subtitles = Context()
+ctx_subtitles.matches = r"""
+mode: all
+"""
 
 
 # Reference: https://old.talon.wiki/unofficial_talon_docs/
@@ -50,10 +50,16 @@ class Actions:
         """Gets setting with specified name"""
         return settings.get(setting_name)
 
-    def show_subtitles():
+    def show_subtitles_codesaway():
         """Shows subtitles"""
-        ctx.tags = ["user.codesaway_subtitles_show"]
+        # Custom subtitles (added to community on July 7, 2024)
+        # https://github.com/talonhub/community/pull/1467
+        ctx_subtitles.settings = {
+            "user.subtitles_show": True,
+            "user.subtitles_timeout_min": 1500,
+            "user.subtitles_y": 0.90,
+        }
 
-    def hide_subtitles():
+    def hide_subtitles_codesaway():
         """Hides subtitles"""
-        ctx.tags = []
+        ctx_subtitles.settings["user.subtitles_show"] = False
