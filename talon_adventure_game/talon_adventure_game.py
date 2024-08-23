@@ -205,6 +205,7 @@ class TalonAdventureGame:
         self.tag_playing = True
 
     def deactivate(self):
+        self.tag_hint = False
         self.tag_playing = False
         self.commands_deque.clear()
         self.commands.clear()
