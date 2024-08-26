@@ -1,6 +1,6 @@
-app.exe: chrome.exe
-title: /Google Docs/
+app: docs
 -
+tag(): user.find_and_replace
 settings():
     user.context_sensitive_dictation = true
 
