@@ -354,7 +354,6 @@ class Actions:
         """Opens the file"""
         # https://stackoverflow.com/a/435669
         # https://github.com/chaosparrot/talon_hud/blob/908ec641514075326fe2c51db329607ae0b2115c/content/speech_poller.py#L88-L93
-        # print(f"program_pathname: {program_pathname}")
 
         if program_pathname == "default":
             actions.user.open_file_default_program(pathname)
@@ -372,7 +371,6 @@ class Actions:
                 extension[1:]
             )
             if fisher_program:
-                # print(f"fisher_program: {fisher_program}")
                 program_pathname = registry.lists["user.fisher_program"][0].get(
                     fisher_program
                 )
@@ -382,7 +380,6 @@ class Actions:
                     )
                     return
 
-                # print(f"program_pathname: {program_pathname}")
                 command = [program_pathname, pathname]
                 actions.user.exec(command)
                 return

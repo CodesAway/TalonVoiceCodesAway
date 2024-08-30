@@ -73,20 +73,14 @@ def namer_snip_replacement(values: dict, transformations: dict, body: str) -> st
         value = namer_variables[variable]
         result.write(f"({re.escape(value)})")
 
-    # print(values_list)
     regex = result.getvalue()
-    # print(regex)
 
     def replacement(match: re.Match) -> str:
-        # print("groups:", match.groups())
-
         group_index = [
             index for index, value in enumerate(match.groups()) if value is not None
         ][0]
-        # print("group_index:", group_index)
 
         group_name = values_list[group_index]
-        # print("replacement:", group_name)
 
         return f"${{{group_name}}}"
 

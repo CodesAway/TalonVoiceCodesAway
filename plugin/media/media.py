@@ -11,12 +11,7 @@ class Actions:
         """
         Play or pause media (overrides functionality in community)
         """
-        # command = actions.core.last_command()[1]  # talon.grammar.vm.Capture
-        # # String version is command said
-        # # Used "dir" build-in command to check attributes and didn't see one that met my needs
-        # command_text = str(command)
         command_text = last_phrase
-        # print(f"media_play_pause@{command_text}@")
 
         if command_text == "media play":
             # Work around to ensure that media play keeps the music playing if it's already playing

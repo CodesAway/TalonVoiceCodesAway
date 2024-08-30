@@ -90,12 +90,6 @@ def split_text_into_lines(text: str, paint: Paint, max_line_width: int) -> list[
     # Reference: https://github.com/chaosparrot/talon_hud/blob/master/utils.py -> layout_rich_text
     # TODO: handle if single word is longer than max_line_width
 
-    # m_char_width = paint.measure_text("m")[1].width
-    # char_count = math.floor(max_line_width / m_char_width)
-    # print(f"c.width: {c.width}")
-    # print(f"char_count: {char_count}")
-    # char_count = 30
-
     words = text.split()
 
     if len(words) == 1:
@@ -339,8 +333,6 @@ class TalonAdventureGame:
                 and "sleep" not in active_modes
             ):
                 actions.mode.enable("command")
-
-        print(f"active_modes: {active_modes}")
 
         self.screen = actions.user.screens_get_by_number(1)
 

@@ -55,12 +55,10 @@ def mouse_move_continuous_helper():
     global mouse_move_amount_x, mouse_move_amount_y, prior_mouse_x, prior_mouse_y
     x = actions.mouse_x()
     y = actions.mouse_y()
-    # print(f"x={x}, y={y}; prior_x={prior_mouse_x}, prior_y={prior_mouse_y}")
 
     if prior_mouse_x != x or prior_mouse_y != y:
         stop_mouse_move()
 
-    # print("scroll_continuous_helper")
     if mouse_move_amount_x or mouse_move_amount_y:
         mouse_move_speed = get_mouse_move_speed()
         relative_x = mouse_move_amount_x * mouse_move_speed
@@ -167,7 +165,6 @@ class Actions:
 
     def mouse_move_speed(speed: int = 0):
         """Adjust move speed relative to current speed (or 0 to reset)"""
-        # print("mouse_move_speed:", speed)
         if speed == 0:
             set_mouse_move_speed(mouse_move_speed_default)
             return

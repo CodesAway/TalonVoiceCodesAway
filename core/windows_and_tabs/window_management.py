@@ -48,7 +48,6 @@ def launcher_apps(app) -> tuple[str, str]:
     if len(launch_apps) == 0:
         for e in registry.lists["user.launch"][0].items():
             if e[0] in launch_apps_scope:
-                # print(e[0], "->", e[1])
                 launch_apps[e[0]] = e[1]
 
     # Convert from Capture to string
@@ -64,12 +63,8 @@ class Actions:
         """
         expand_path = os.path.expandvars(path).lower().replace("/", "\\")
         foreground_apps = ui.apps(background=False)
-        # expand_path_filename = os.path.basename(expand_path)
 
-        # print("Path:", expand_path)
-        # print("Filename:", expand_path_filename)
         for cur_app in foreground_apps:
-            # print("Check:", cur_app.exe)
             if cur_app.exe == expand_path:
                 logging.debug(f"Focus: {path}")
                 cur_app.focus()
@@ -130,13 +125,11 @@ def find_window(normalized_title="", normalized_executable="", ignore_active=Fal
         if normalized_title:
             # Normalize window title to ignore symbols (to allow matching titles based on how would read title)
             normalized_window_title = normalize_title(window.title)
-            # print("Checking:", normalized_window_title)
             if normalized_window_title.find(normalized_title) == -1:
                 continue
 
         if normalized_executable:
             normalized_window_executable = normalize_title(window.app.exe)
-            # print("Checking:", normalized_window_executable)
             if normalized_window_executable.find(normalized_executable) == -1:
                 continue
 
@@ -163,7 +156,5 @@ def hunt_window(title):
 
     return window
 
-
-# print(find_window(normalized_executable="word"))
 
 # Implement winwait using user.switcher_focus_app
