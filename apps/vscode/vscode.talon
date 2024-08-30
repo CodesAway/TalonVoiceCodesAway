@@ -3,6 +3,9 @@ os: windows
 -
 # Reference: community\apps\vscode\vscode.talon
 
+settings():
+    user.context_sensitive_dictation = true
+
 # Overrides command from community
 focus editor:
     user.vscode("workbench.action.focusActiveEditorGroup")
