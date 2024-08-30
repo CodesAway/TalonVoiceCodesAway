@@ -1,0 +1,44 @@
+{
+    "": "file://./../../community/plugin/mouse/mouse.talon",
+    "touch": "Left click",
+    "righty": "Right click",
+    "mid click": "Middle click",
+    "dub click": "Double left click",
+    "trip click": "Tripple left click",
+    "left drag": [
+        "drag",
+        "drag end"
+    ],
+    "right drag": [
+        "right drag",
+        "drag end"
+    ],
+    "wheel down": "Scrolls down",
+    "wheel down here": "Scrolls down after move the mouse cursor to the center of the currently active window",
+    "wheel tiny down": "Scrolls tiny down",
+    "wheel tiny down here": "Scrolls tiny down after move the mouse cursor to the center of the currently active window",
+    "wheel downer": [
+        "wheel downer",
+        "wheel stop"
+    ],
+    "wheel downer here": [
+        "wheel downer here",
+        "wheel stop"
+    ],
+    "wheel up": "Scrolls up",
+    "wheel up here": "Scrolls up after move the mouse cursor to the center of the currently active window",
+    "wheel tiny up": "Scrolls tiny up",
+    "wheel tiny up here": "Scrolls tiny up after move the mouse cursor to the center of the currently active window",
+    "wheel upper": [
+        "wheel upper",
+        "wheel stop"
+    ],
+    "wheel upper here": [
+        "wheel upper here",
+        "wheel stop"
+    ],
+    "wheel left": "Scrolls left",
+    "wheel left here": "Scrolls left after move the mouse cursor to the center of the currently active window",
+    "wheel tiny left": "Scrolls tiny left",
+    "wheel tiny left here": "Scrolls tiny left after move the mouse cursor to the center of the currently active window"
+}

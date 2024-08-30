@@ -11,6 +11,7 @@ from talon import (
     actions,
     app,  # type: ignore
     registry,
+    scope,
     ui,  # type: ignore
 )
 from talon.canvas import Canvas
@@ -27,7 +28,7 @@ mod.list(
     "tag_find_and_replace_commands",
     "Find and Replace commands for Talon Adventure Game",
 )
-mod.tag("tag_game", "Playing Talon Adventure Game")
+mod.mode("tag_game", "Playing Talon Adventure Game")
 
 
 @mod.capture(rule="{user.tag_game_module}")
@@ -159,7 +160,16 @@ class TalonAdventureGame:
 
                 value: dict[str, any]
                 for key, value in json_commands.items():
-                    if value.get("description"):
+                    if key == "":
+                        # NOTE: can use empty key to specify file which is being done (since JSON doesn't allow comments)
+                        continue
+
+                    if isinstance(value, str):
+                        value = {"display_text": value}
+                    elif isinstance(value, list):
+                        # NOTE: display_text is not used when there are commands, so just use key to pass validations
+                        value = {"commands": value, "display_text": key}
+                    elif value.get("description"):
                         description = value["description"]
                         # self.commands.add(description)
                         del value["description"]
@@ -319,6 +329,19 @@ class TalonAdventureGame:
         self.typeface = "arial"
         self.command_typeface = "consolas"
 
+        active_modes = scope.get("mode")
+        if "user.tag_game" in active_modes:
+            actions.mode.disable("user.tag_game")
+
+            if (
+                "command" not in active_modes
+                and "dictation" not in active_modes
+                and "sleep" not in active_modes
+            ):
+                actions.mode.enable("command")
+
+        print(f"active_modes: {active_modes}")
+
         self.screen = actions.user.screens_get_by_number(1)
 
         if self.canvas:
@@ -370,12 +393,14 @@ class Actions:
         tag.setup()
         tag.show_game(talon_list, include_letters)
 
-        ctx.tags = ["user.tag_game"]
+        actions.mode.disable("command")
+        actions.mode.enable("user.tag_game")
 
     def tag_game_stop():
         """Stops Talon Adventure Game (TAG)"""
         tag.deactivate()
-        ctx.tags = []
+        actions.mode.enable("command")
+        actions.mode.disable("user.tag_game")
 
     def tag_game_hint():
         """Shows command corresponding to description"""
@@ -384,4 +409,4 @@ class Actions:
 
     def tag_game_handle_command(command: str):
         """Handles spoke TAG command"""
-        tag.handle_command(command)
+        tag.handle_command(command.strip())
