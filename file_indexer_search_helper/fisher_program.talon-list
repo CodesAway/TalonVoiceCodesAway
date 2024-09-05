@@ -1,5 +1,7 @@
 list: user.fisher_program
 -
-default: default
-code: %LocalAppData%\Programs\Microsoft VS Code\Code.exe
-inkscape: %Dropbox%\Programs\InkscapePortable\InkscapePortable.exe
+
+default:                                        default
+chrome:                                         C:\Program Files\Google\Chrome\Application\chrome.exe
+code:                                           %LocalAppData%\Programs\Microsoft VS Code\Code.exe
+inkscape:                                       %Dropbox%\Programs\InkscapePortable\InkscapePortable.exe

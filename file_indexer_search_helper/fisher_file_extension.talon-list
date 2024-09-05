@@ -1,4 +1,6 @@
 list: user.fisher_file_extension
 -
-py: code
-svg: inkscape
+
+pdf:                                            chrome
+py:                                             code
+svg:                                            inkscape
