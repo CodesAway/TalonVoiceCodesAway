@@ -87,3 +87,5 @@ git push <user.text>:
     user.vscode("git.push")
     sleep(100ms)
     insert(text or "")
+
+git discard:                                    user.vscode("git.clean")

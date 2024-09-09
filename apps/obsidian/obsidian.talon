@@ -12,3 +12,8 @@ open <user.text>:
     key(ctrl-o)
     sleep(50ms)
     insert("{text}")
+
+please <user.text>:
+    key(ctrl-p)
+    sleep(50ms)
+    insert("{text}")
