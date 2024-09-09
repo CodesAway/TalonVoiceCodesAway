@@ -24,10 +24,6 @@ mod.list(
     "tag_game_module",
     "Modules for Talon Adventure Game",
 )
-mod.list(
-    "tag_find_and_replace_commands",
-    "Find and Replace commands for Talon Adventure Game",
-)
 mod.mode("tag_game", "Playing Talon Adventure Game")
 
 
@@ -121,12 +117,15 @@ class TalonAdventureGame:
         self.screen: ui.Screen = None
         self.canvas: Canvas = None
 
+        # TODO: Initialize via settings
         self.typeface = "arial"
         self.command_typeface = "consolas"
 
+        # TODO: Initialize via settings
         self.background_color = "663399"  # Rebecca purple
         self.text_color = "ffffff"  # Amy's blue color
 
+        # TODO: Initialize via settings
         self.command_background_color = "663399"  # Rebecca purple
         self.command_text_color = "33b2cd"  # Amy's blue color
 

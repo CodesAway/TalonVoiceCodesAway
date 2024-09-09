@@ -2,5 +2,6 @@ list: user.tag_game_module
 -
 
 # Can use environment variables to specify location
-replace:                                        user.tag_find_and_replace_commands
+media:                                          user.tag_media_commands
 mouse:                                          mouse.json
+replace:                                        user.tag_find_and_replace_commands

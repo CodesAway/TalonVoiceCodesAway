@@ -1,0 +1,11 @@
+list: user.tag_media_commands
+-
+
+volume up:                                      Raise volume
+volume down:                                    Lower volume
+# set volume number: "Disabled until fix https://github.com/talonhub/community/issues/1491"
+volume mute:                                    Mute volume
+play next:                                      Next media
+play previous:                                  Previous media
+media play:                                     Play media
+media pause:                                    Pause media
