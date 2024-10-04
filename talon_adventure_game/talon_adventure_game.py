@@ -123,7 +123,7 @@ class TalonAdventureGame:
 
         # TODO: Initialize via settings
         self.background_color = "663399"  # Rebecca purple
-        self.text_color = "ffffff"  # Amy's blue color
+        self.text_color = "ffffff"  # White
 
         # TODO: Initialize via settings
         self.command_background_color = "663399"  # Rebecca purple
@@ -261,7 +261,11 @@ class TalonAdventureGame:
         # TODO: split text into lines based on width (word wrapping to handle long lines)
         max_line_width = c.width - 2 * border_size
 
-        lines = split_text_into_lines(text, paint, max_line_width)
+        lines = [
+            line
+            for split_line in text.split("\n")
+            for line in split_text_into_lines(split_line, paint, max_line_width)
+        ]
         line_spacing = border_size
         hint_lines = []
 
