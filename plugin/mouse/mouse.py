@@ -2,7 +2,13 @@
 
 import logging
 
-from talon import Context, Module, actions, cron, ctrl
+from talon import (
+    Context,
+    Module,
+    actions,
+    cron,  # type: ignore
+    ctrl,  # type: ignore
+)
 
 mouse_move_speed_default = 5
 
