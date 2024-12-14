@@ -1,0 +1,15 @@
+list: user.tag_code_imperative_commands
+-
+
+# Reference: file://./../../community\lang\tags\imperative.talon
+state if:                                       Inserts if statement
+state else if:                                  Inserts else if statement
+state else:                                     Inserts else statement
+state while:                                    Inserts while statement
+state for:                                      Inserts for statement
+state for in:                                   Inserts for each equivalent statement
+state switch:                                   Inserts switch statement
+state case:                                     Inserts case statement
+state return:                                   Inserts return statement
+state break:                                    Inserts break statement
+state continue:                                 Inserts continue statement

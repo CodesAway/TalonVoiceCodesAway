@@ -5,3 +5,6 @@ list: user.tag_game_module
 media:                                          user.tag_media_commands
 mouse:                                          mouse.json
 replace:                                        user.tag_find_and_replace_commands
+# Code
+imperative:                                     user.tag_code_imperative_commands
+assignment:                                     user.tag_operators_assignment_commands

@@ -1,0 +1,19 @@
+list: user.tag_operators_assignment_commands
+-
+
+# Reference: file://./../../community\lang\tags\operators_assignment.talon
+op equals:                                      Assignment operator
+
+# combined computation and assignment
+op minus equals:                                Subtraction assignment operator
+op plus equals:                                 Addition assignment operator
+op times equals:                                Multiplication assignment operator
+op divide equals:                               Division assignment operator
+op mod equals:                                  Modulo assignment operator
+
+#bitwise operators
+bit wise and equals:                            Bitwise and assignment operator
+bit wise or equals:                             Bitwise or assignment operator
+bitwise ex or equals:                           Bitwise exclusive or assignment operator
+bitwise left shift equals:                      Bitwise left shift assignment operator
+bitwise right shift equals:                     Bitwise right shift assignment operator
