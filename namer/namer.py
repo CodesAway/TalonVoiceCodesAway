@@ -110,6 +110,10 @@ class Actions:
         """Gets namer variable"""
         return namer_variables[variable]
 
+    def namer_get_variables(variables: list[str], joiner: str = ""):
+        """Gets namer variables"""
+        return joiner.join([namer_variables[variable] for variable in variables])
+
     def namer_set_variable(variable: str, value: str) -> None:
         """
         Sets namer variable

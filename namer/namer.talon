@@ -43,6 +43,10 @@ namer peek <user.text>:
     value = user.namer_get_variable(text)
     insert(value)
 
+namer {user.namer_variable}+:
+    value = user.namer_get_variables(namer_variable_list)
+    insert(value)
+
 # Reference: community\core\snippets\snippets.talon
 namer snip {user.snippet}:                      user.namer_insert_snippet(snippet)
 
