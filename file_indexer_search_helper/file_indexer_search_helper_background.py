@@ -291,6 +291,24 @@ def index_files(database_pathname: str):
     # Also indicate type of line (such as assignment, function definition, etc.)
 
     update_count = update_count_mutable[0]
+    upsert_database(database_pathname, update_count, insert_files, delete_records)
+
+    end_time = time.time()
+
+    # get the execution time
+    elapsed_time = end_time - start_time
+    logging.debug(f"FISHer Execution time: {elapsed_time} seconds")
+
+
+# TODO: implement method to index_files_batch based on passed deque
+
+
+def upsert_database(
+    database_pathname: str,
+    update_count: int,
+    insert_files: list[dict[str, Any]],
+    delete_records: set[int],
+):
     connection: Connection
     with sqlite3.connect(database_pathname) as connection:
         # https://stackoverflow.com/a/52479382
@@ -314,18 +332,10 @@ def index_files(database_pathname: str):
         connection.commit()
 
         logging.debug(f"FISHer Updated {update_count} files in database")
-        logging.debug(
-            f"FISHer Inserted {len(insert_files) - update_count} files from {str(root_path)}"
-        )
+        logging.debug(f"FISHer Inserted {len(insert_files) - update_count} files")
         logging.debug(
             f"FISHer Deleted {len(delete_records) - update_count} records from database"
         )
-
-    end_time = time.time()
-
-    # get the execution time
-    elapsed_time = end_time - start_time
-    logging.debug(f"FISHer Execution time: {elapsed_time} seconds")
 
 
 unlink_fisher_path: Path = None
