@@ -26,6 +26,22 @@ def symbol_key(m):
     return str(m)
 
 
+# Reference community\core\numbers\numbers.py
+@mod.capture(rule="<user.number_string> ((dash | hypen | minus) <user.number_string>)+")
+def number_prose_with_dash(m) -> str:
+    return "-".join(m.number_string_list)
+
+
+@mod.capture(rule="<user.number_prose_with_dash>")
+def codesaway_number_prose_unprefixed(m) -> str:
+    return m[0]
+
+
+@mod.capture(rule="(numb | numeral) <user.codesaway_number_prose_unprefixed>")
+def codesaway_number_prose_prefixed(m) -> str:
+    return m.codesaway_number_prose_unprefixed
+
+
 def on_ready():
     actions.sound.set_microphone("System Default")
 

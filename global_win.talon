@@ -61,8 +61,7 @@ key(ctrl-shift-space):                          user.screenshot()
 [<number_small>] deli:                          key("delete:{number_small or 1}")
 
 [<number_small>] tab (last | left):             key("ctrl-pageup:{number_small or 1}")
-# Added "tab wipe" as workaround, since Talon frequently hears "tab wipe" when I say "tab right"
-[<number_small>] tab (next | right | wipe):     key("ctrl-pagedown:{number_small or 1}")
+[<number_small>] tab (next | right):            key("ctrl-pagedown:{number_small or 1}")
 tab close:                                      key("ctrl-w")
 tab (reopen | restore):                         key("ctrl-shift-t")
 
@@ -108,3 +107,5 @@ hunt all <user.text>:
     key("ctrl-shift-f")
     sleep(50ms)
     insert(text)
+
+<user.codesaway_number_prose_prefixed>:         "{codesaway_number_prose_prefixed}"
