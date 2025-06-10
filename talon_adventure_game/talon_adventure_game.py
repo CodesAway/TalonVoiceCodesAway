@@ -15,8 +15,8 @@ from talon import (
     ui,  # type: ignore
 )
 from talon.canvas import Canvas
+from talon.skia import Canvas as SkiaCanvas
 from talon.skia import Paint, Rect
-from talon.skia.canvas import Canvas as SkiaCanvas
 
 mod = Module()
 mod.list("tag_game_command", "Commands for Talon Adventure Game")
@@ -77,7 +77,7 @@ def calculate_bottom_border(paint: Paint):
 
     for letter in letters:
         rect: Rect = paint.measure_text(letter)[1]
-        bottom_border = max(bottom_border, rect.y + rect.height)
+        bottom_border = max(bottom_border, rect.bot)
 
     return bottom_border
 
@@ -139,67 +139,69 @@ class TalonAdventureGame:
         self.tag_playing = False
         self.tag_hint = False
 
-    def show_game(self, talon_list: str, include_letters: bool):
+    def populate_commands_from_json(self, talon_list: str):
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        pathname = os.path.join(cwd, os.path.expandvars(talon_list))
+        with open(pathname) as file:
+            json_commands = json.load(file)
+
         commands_list: list[TAGElement] = []
+        value: dict[str, any]
+        for key, value in json_commands.items():
+            if key == "":
+                # NOTE: can use empty key to specify file which is being done (since JSON doesn't allow comments)
+                continue
+
+            if isinstance(value, str):
+                value = {"display_text": value}
+            elif isinstance(value, list):
+                # NOTE: display_text is not used when there are commands, so just use key to pass validations
+                value = {"commands": value, "display_text": key}
+            elif value.get("description"):
+                value["display_text"] = value.pop("description")
+
+            element = TAGElement(key, **value)
+            commands_list.append(element)
+            # Add key to prevent accidental commands
+            self.commands.add(key)
+
+            if element.commands:
+                self.commands.update(element.commands)
+            else:
+                # Add practice for "flip side" display command and say command
+                commands_list.append(TAGElement(key, key, True))
+
+        return commands_list
+
+    def populate_commands(self, talon_list: str) -> list[TAGElement]:
+        # TODO: optionally support having multiple lists / json defined using "|" as delimiter
+        # Could also allow referencing other map keys from the tag_game_module.talon-list
+        # (so could specify once and then combine to practice several together)
         if talon_list:
-            # TODO: optionally support having multiple lists / json defined using "|" as delimiter
-            # Could also allow referencing other map keys from the tag_game_module.talon-list
-            # (so could specify once and then combine to practice several together)
             if talon_list.endswith(".json"):
-                cwd = os.path.dirname(os.path.realpath(__file__))
-                pathname = os.path.join(cwd, os.path.expandvars(talon_list))
-                with open(pathname) as file:
-                    json_commands = json.load(file)
-
-                value: dict[str, any]
-                for key, value in json_commands.items():
-                    if key == "":
-                        # NOTE: can use empty key to specify file which is being done (since JSON doesn't allow comments)
-                        continue
-
-                    if isinstance(value, str):
-                        value = {"display_text": value}
-                    elif isinstance(value, list):
-                        # NOTE: display_text is not used when there are commands, so just use key to pass validations
-                        value = {"commands": value, "display_text": key}
-                    elif value.get("description"):
-                        description = value["description"]
-                        # self.commands.add(description)
-                        del value["description"]
-                        value["display_text"] = description
-
-                    element = TAGElement(key, **value)
-                    commands_list.append(element)
-                    # Add key to prevent accidental commands
-                    self.commands.add(key)
-
-                    if element.commands:
-                        self.commands.update(element.commands)
-                    else:
-                        # Add practice for "flip side" display command and say command
-                        commands_list.append(TAGElement(key, key, True))
+                return self.populate_commands_from_json(talon_list)
             else:
                 talon_list_dict = registry.lists[talon_list][0]
                 self.commands.update(talon_list_dict.keys())
-                # self.commands.update(talon_list_dict.values())
-                for key, value in talon_list_dict.items():
-                    commands_list.append(TAGElement(key, value))
-                    commands_list.append(TAGElement(key, key, True))
+                return [
+                    e
+                    for key, value in talon_list_dict.items()
+                    for e in (TAGElement(key, value), TAGElement(key, key, True))
+                ]
+        else:
+            return []
+
+    def show_game(self, talon_list: str, include_letters: bool):
+        # TODO: if display text has invalid characters (such as '(' or ')' will show warning in Talon log)
+        commands_list: list[TAGElement] = self.populate_commands(talon_list)
 
         if include_letters or not self.commands:
             letters = registry.lists["user.letter"][0]
             self.commands.update(letters.keys())
-            # self.commands.update(letters.values())
             for key, value in letters.items():
-                display_text = "letter " + value
-                # TODO: if display text has invalid characters (such as '(' or ')' will show warning in Talon log)
-                # self.commands.update(display_text)
-                commands_list.append(TAGElement(key, display_text))
+                commands_list.append(TAGElement(key, "letter " + value))
                 commands_list.append(TAGElement(key, key, True))
 
-        # TODO: use both commands and coresponding text (similiar to front / back of flashcard)
-        # Makes a copy of all commands
-        # (ensures saying a command will not trigger it, such as when practicing and say incorrect command)
         ctx.lists["user.tag_game_command"] = self.commands
         random.shuffle(commands_list)
         self.commands_deque = deque(commands_list)
@@ -220,77 +222,68 @@ class TalonAdventureGame:
         if self.canvas:
             self.canvas.freeze()
 
+    @staticmethod
+    def calc_row_height(paint: Paint, typeface: str):
+        # TODO: tried to restore original typeface, but if None get error "invalid type for typeface"
+        paint.typeface = typeface
+        bottom_border = calculate_bottom_border(paint)
+        row_height = paint.measure_text("A")[1].height
+
+        return (row_height, bottom_border)
+
+    def is_command(self):
+        return self.last_element.is_command
+
+    def determine_lines(
+        self, paint: Paint, max_line_width: int
+    ) -> tuple[list[str], int]:
+        lines = [
+            line
+            for split_line in self.last_element.display_text.split("\n")
+            for line in split_text_into_lines(split_line, paint, max_line_width)
+        ]
+
+        hint_lines = []
+        if self.tag_hint and not self.is_command():
+            hint_lines = split_text_into_lines(
+                "`" + self.last_element.name + "`", paint, max_line_width
+            )
+            lines = hint_lines + lines
+
+        return (lines, len(hint_lines))
+
     # Reference: community\core\screens\screens.py -> show_screen_number,
     def on_draw(self, c: SkiaCanvas):
         if not self.tag_playing:
             return
 
         paint: Paint = c.paint
-        # TODO: make setting?
-        # paint.font.embolden = True
         # The min(width, height) is to not get gigantic size on portrait screens
         paint.textsize = round(min(c.width, c.height) / 8)
-        border_size = paint.textsize / 5
+        border_size = round(paint.textsize / 5)
 
         if not self.row_height:
-            paint.typeface = self.typeface
-            bottom_border = calculate_bottom_border(paint)
-            sample: Rect = paint.measure_text("A")[1]
-            row_height = sample.height
-
-            paint.typeface = self.command_typeface
-            command_bottom_border = calculate_bottom_border(paint)
-            sample: Rect = paint.measure_text("A")[1]
-            command_row_height = sample.height
-
-            self.bottom_border = (
-                bottom_border
-                if bottom_border > command_bottom_border
-                else command_bottom_border
-            )
-            self.row_height = (
-                row_height if row_height > command_row_height else command_row_height
+            self.row_height, self.bottom_border = max(
+                self.calc_row_height(paint, self.typeface),
+                self.calc_row_height(paint, self.command_typeface),
             )
 
-        paint.typeface = (
-            self.command_typeface if self.last_element.is_command else self.typeface
-        )
+        paint.typeface = self.command_typeface if self.is_command() else self.typeface
+        lines, hint_lines_count = self.determine_lines(paint, c.width - 2 * border_size)
 
-        text = self.last_element.display_text
-
-        # TODO: split text into lines based on width (word wrapping to handle long lines)
-        max_line_width = c.width - 2 * border_size
-
-        lines = [
-            line
-            for split_line in text.split("\n")
-            for line in split_text_into_lines(split_line, paint, max_line_width)
-        ]
-        line_spacing = border_size
-        hint_lines = []
-
-        if self.tag_hint and not self.last_element.is_command:
-            hint_lines = split_text_into_lines(
-                "`" + self.last_element.name + "`", paint, max_line_width
-            )
-            lines = hint_lines + lines
-
-        between_lines_height = self.bottom_border + line_spacing
+        between_lines_height = self.bottom_border + border_size
         height = self.row_height * len(lines) + between_lines_height * (len(lines) - 1)
 
-        # rect: Rect = paint.measure_text(text)[1]
-        rects: list[Rect] = [paint.measure_text(line)[1] for line in lines]
+        rects: list[Rect] = [c.paint.measure_text(line)[1] for line in lines]
         min_x = min(rects, key=attrgetter("x")).x
         max_width = max(rects, key=attrgetter("width")).width
 
-        # x = c.x + c.width / 2 - rect.x - rect.width / 2
         x = c.x + c.width / 2 - min_x - max_width / 2
         y = c.y + c.height / 2 + height / 2 + self.bottom_border / 2
 
         card_rect = Rect(
             x - border_size,
             y - border_size - height,
-            # rect.width + 2 * border_size,
             max_width + 2 * border_size,
             height + self.bottom_border + 2 * border_size,
         )
@@ -298,22 +291,17 @@ class TalonAdventureGame:
         paint.style = paint.Style.FILL
         paint.color = (
             self.command_background_color
-            if self.last_element.is_command
+            if self.is_command()
             else self.background_color
         )
         c.draw_rect(card_rect)
 
-        paint.style = paint.Style.FILL
-
         for index, line in enumerate(lines):
-            if index < len(hint_lines):
-                paint.color = self.command_text_color
-            else:
-                paint.color = (
-                    self.command_text_color
-                    if self.last_element.is_command
-                    else self.text_color
-                )
+            paint.color = (
+                self.command_text_color
+                if index < hint_lines_count or self.is_command()
+                else self.text_color
+            )
 
             c.draw_text(
                 line,
@@ -326,15 +314,12 @@ class TalonAdventureGame:
         self.typeface = "arial"
         self.command_typeface = "consolas"
 
-        active_modes = scope.get("mode")
+        # Workaround for this script being modified while TAG is running (otherwise Talon left in weird state)
+        active_modes: set = scope.get("mode")
         if "user.tag_game" in active_modes:
             actions.mode.disable("user.tag_game")
 
-            if (
-                "command" not in active_modes
-                and "dictation" not in active_modes
-                and "sleep" not in active_modes
-            ):
+            if not active_modes.intersection({"command", "dictation", "sleep"}):
                 actions.mode.enable("command")
 
         self.screen = actions.user.screens_get_by_number(1)
