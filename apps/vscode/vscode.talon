@@ -92,3 +92,4 @@ git discard:                                    user.vscode("git.clean")
 
 file copy relative [path]:                      user.vscode("copyRelativeFilePath")
 file new:                                       user.vscode("workbench.action.files.newUntitledFile")
+this format:                                    user.vscode("editor.action.formatDocument")

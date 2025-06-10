@@ -57,6 +57,7 @@ def launcher_apps(app) -> tuple[str, str]:
 
 @mod.action_class
 class Actions:
+    # TODO: enhance based on file:///Users/cross/AppData/Roaming/talon/user/community/core/windows_and_tabs/window_snap.py
     def bring_app(path: str) -> None:
         """
         Open application at specified path (replacing environment variables and focusing if already open)
@@ -91,6 +92,7 @@ class Actions:
         Snap window to position (twice as workaround)
         """
         # Workaround since if in full screen, doesn't snap correctly on first time on Windows 11
+        # TODO: look into C:\Users\cross\AppData\Roaming\talon\user\community\core\windows_and_tabs\window_snap.py
         actions.user.snap_window_to_position(position_name)
         actions.user.snap_window_to_position(position_name)
 

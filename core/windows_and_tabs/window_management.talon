@@ -3,8 +3,8 @@
 
 # Referenced: user\community\core\windows_and_tabs\window_snap.py
 # Noticed that if maximized, needs to be snapped twice to be correct (noticed all windows on Windows 11)
-window left:                                    user.snap_window_to_position_twice("left")
-window right:                                   user.snap_window_to_position_twice("right")
+window left:                                    user.snap_window_to_position_twice("LEFT")
+window right:                                   user.snap_window_to_position_twice("RIGHT")
 # TODO: Noticed maximize doesn't work for VSCode, but other windows no issue (maybe not targetting the right window of the app??)
 [window] maximize [<user.text>]:                user.maximize_title(text or "")
 [window] minimize [<user.text>]:                user.minimize_title(text or "")
