@@ -22,7 +22,8 @@ class TalonAdventureGameMetroid:
         self.expected_phrases: set[str] = set()
         self.expected_app: ui.App = None
         self.expected_title: str = ""
-        self.game_state: dict = {}
+        # TODO: save and load this...reference namer)
+        self.game_state: dict[str, any] = {}
         # TODO: morph this into a scalable idea in game_state
         self.state_index: int = 0
         self.victory_sleep_time: float = 0
@@ -35,7 +36,7 @@ class TalonAdventureGameMetroid:
         # edit_sandbox_file()
 
     def clear_expected_phrases(self):
-        self.expected_phrases.clear()
+        self.expected_phrases = set()
         self.expected_app = None
         self.expected_title = ""
 
@@ -136,7 +137,7 @@ def handle_expected_phrase(phrase: Phrase):
     elif len(tag.expected_phrases) == 1:
         error_message = f'TAG Metroid:\nIgnoring "{words_text}"\n(expected "{next(iter(tag.expected_phrases))}")'
     else:
-        error_message = f'TAG Metroid:\nIgnoring "{words_text}"\n(expected one of "{tag.expected_phrases}")'
+        error_message = f'TAG Metroid:\nIgnoring "{words_text}"\n(expected one of {str(list(tag.expected_phrases)).removeprefix("[").removesuffix("]")})'
 
     print(error_message)
     app.notify(error_message)
