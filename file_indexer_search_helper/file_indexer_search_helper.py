@@ -6,6 +6,7 @@ import platform
 import sqlite3
 import subprocess
 import sys
+from collections import deque
 from pathlib import Path
 
 from talon import (
@@ -32,7 +33,7 @@ try:
     has_humanfriendly = True
 except ModuleNotFoundError:
     # Error handling
-    logging.warn(
+    logging.info(
         "Dependency humanfriendly isn't available (using default date / time format)"
     )
 
@@ -112,7 +113,7 @@ def format_datetime(seconds: float) -> str:
         if diff < 60:
             return "seconds ago"
 
-        return f"{humanfriendly.format_timespan(now - seconds, max_units = 1)} ago"
+        return f"{humanfriendly.format_timespan(now - seconds, max_units=1)} ago"
 
     seconds_datetime = datetime.datetime.fromtimestamp(seconds)
 
@@ -143,7 +144,7 @@ def fisher_gui_search_results(gui: imgui.GUI):
         directory = search_result["directory"]
         filename = search_result["filename"]
 
-        gui.text(f"{i+1:<5d}{directory}")
+        gui.text(f"{i + 1:<5d}{directory}")
         # TODO: include size, relative date in parentheses
         # Use decimal bytes (multiples of 1000) which matches what's done in everything but Windows
         # Give option to use decimal bytes instead
@@ -220,7 +221,17 @@ def index_files():
     file_path = (
         Path(__file__).resolve().with_name("file_indexer_search_helper_background.py")
     )
-    fisher_command = [sys.executable, file_path, database_pathname]
+
+    python_executable = Path(sys.executable)
+    while not python_executable.exists():
+        python_executable = python_executable.parent
+        try_python_executable = python_executable.with_name(
+            python_executable.name + ".exe"
+        )
+        if not python_executable.exists() and try_python_executable.exists():
+            python_executable = try_python_executable
+
+    fisher_command = [python_executable, file_path, database_pathname]
     # TODO: add error handling (in case script breaks)
     fisher_subprocess = subprocess.Popen(fisher_command, shell=True)
     logging.debug(
@@ -231,7 +242,7 @@ def index_files():
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
 # Enable paging (like done for help)
 # This may help make results easier to read
-def search(FULL_TEXT_SEARCH_TEXT) -> list[dict[str, str]]:
+def search(search_text: str) -> list[dict[str, str]]:
     # Note: -e.priority desc will sort NULL / no priority last (since descending)
     # Negative ensures that, for example, priority 0 comes before priority 1
     # (since 0 > -1, so when sorting descending will be earlier)
@@ -241,7 +252,7 @@ def search(FULL_TEXT_SEARCH_TEXT) -> list[dict[str, str]]:
         {priority_file_extensions_sql}
     )
     SELECT rowid, e.priority, f.directory, f.name, f.extension, f.size, f.modified_time
-    FROM {TABLE_NAME}("{FULL_TEXT_SEARCH_TEXT}") f
+    FROM {TABLE_NAME}("{search_text}") f
     left join extension_xref e on e.extension = f.extension
     order by f.rank, -e.priority desc
     limit 10
@@ -289,7 +300,45 @@ def on_ready():
 
     cron.interval("600s", index_files)
 
+    # fs.watch(actions.path.talon_user(), on_watch)
+
     # search("ada dis*")
+
+
+modified_files = deque()
+modified_files_job = None
+
+
+def on_watch(path, flags):
+    global modified_files_job
+
+    # print(f"{path} ({flags})")
+    modified_files.append(path)
+
+    # Handle modified files in batch group
+    if modified_files_job:
+        cron.cancel(modified_files_job)
+
+    # Wait 2 seconds to see if other files are modified (such as during a code checkout / update)
+    modified_files_job = cron.after("2000ms", process_modified_files)
+
+
+def process_modified_files():
+    global modified_files_job
+    modified_files_job = None
+    process_modified_files = deque(modified_files)
+    # Remove files, since will be already processed
+    # Pop from left since these were added first
+    # Don't use clear, since more modified files may be added as we're processing, so don't want to clear these
+    for i in range(len(process_modified_files)):
+        modified_files.popleft()
+
+    # Handle duplicates
+    process_modified_files = set(process_modified_files)
+
+    print("Process modified files:")
+    for path in process_modified_files:
+        print(path)
 
 
 app.register("ready", on_ready)
@@ -379,6 +428,8 @@ class Actions:
                         f"Could not find program named '{fisher_program}' in user.fisher_programs"
                     )
                     return
+
+                program_pathname = os.path.expandvars(program_pathname)
 
                 command = [program_pathname, pathname]
                 actions.user.exec(command)
