@@ -8,6 +8,7 @@ window right:                                   user.snap_window_to_position_twi
 # TODO: Noticed maximize doesn't work for VSCode, but other windows no issue (maybe not targetting the right window of the app??)
 [window] maximize [<user.text>]:                user.maximize_title(text or "")
 [window] minimize [<user.text>]:                user.minimize_title(text or "")
+minimize all:                                   user.minimize_all()
 
 # # Window
 # "window left": R(Function(maximize_title)) + R(Key("w-left")),

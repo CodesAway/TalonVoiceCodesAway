@@ -112,6 +112,12 @@ class Actions:
         if window:
             window.minimized = True
 
+    def minimize_all():
+        """
+        Minimize all windows
+        """
+        actions.key("win-d")
+
 
 def normalize_title(title):
     return re.sub("[-_() ]", "", title.lower())
@@ -131,7 +137,9 @@ def find_window(normalized_title="", normalized_executable="", ignore_active=Fal
                 continue
 
         if normalized_executable:
-            normalized_window_executable = normalize_title(window.app.exe)
+            normalized_window_executable = normalize_title(
+                os.path.basename(window.app.exe)
+            )
             if normalized_window_executable.find(normalized_executable) == -1:
                 continue
 

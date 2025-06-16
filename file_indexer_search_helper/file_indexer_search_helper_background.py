@@ -61,7 +61,7 @@ VERSION = 1
 # https://www.geeksforgeeks.org/sqlite-full-text-search/
 CREATE_VIRTUAL_TABLE = f"""
 CREATE VIRTUAL TABLE IF NOT EXISTS {TABLE_NAME}
-USING FTS5(directory, name, extension, size, modified_time, version);
+USING FTS5(directory, name, extension, size, modified_time, version, tokenize = 'porter trigram');
 """
 
 SELECT_COUNT = f"select count(1) as count from {TABLE_NAME}"
