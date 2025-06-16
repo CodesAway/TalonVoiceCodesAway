@@ -108,4 +108,9 @@ hunt all <user.text>:
     sleep(50ms)
     insert(text)
 
+super hunt <user.text>:
+    key("super")
+    sleep(500ms)
+    insert(text)
+
 <user.codesaway_number_prose_prefixed>:         "{codesaway_number_prose_prefixed}"
