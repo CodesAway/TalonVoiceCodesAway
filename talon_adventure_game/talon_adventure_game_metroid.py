@@ -26,7 +26,7 @@ class TalonAdventureGameMetroid:
         self.game_state: dict[str, any] = {}
         # TODO: morph this into a scalable idea in game_state
         self.state_index: int = 0
-        self.victory_sleep_time: float = 0
+        # self.victory_sleep_time: float = 0
         self.handle_post_phrase: Phrase = None
 
     def show_game(self):
@@ -51,10 +51,15 @@ class TalonAdventureGameMetroid:
         speech_system.register("post:phrase", post_phrase)
 
     def set_next_step(self):
-        tag.state_index += 1
+        victory_callback = self.game_state.get("victory_callback")
+        if callable(victory_callback):
+            victory_callback(self)
 
-        if tag.victory_sleep_time:
-            actions.sleep(tag.victory_sleep_time)
+        tag.state_index += 1
+        tag.handle_post_phrase = None
+
+        # if tag.victory_sleep_time:
+        #     actions.sleep(tag.victory_sleep_time)
 
         self.continue_game()
 
@@ -100,8 +105,8 @@ def pre_phrase(phrase: Phrase):
 
 def post_phrase(phrase: Phrase):
     if phrase == tag.handle_post_phrase:
-        tag.handle_post_phrase = None
         tag.set_next_step()
+        # tag.game_state.pop("victory_callback", None)
 
 
 def handle_expected_phrase(phrase: Phrase):
@@ -174,4 +179,5 @@ class Actions:
         speech_system.unregister("pre:phrase", pre_phrase)
         speech_system.unregister("post:phrase", post_phrase)
         tag.deactivate()
+        tag.game_state.clear()
         ctx.tags = []
