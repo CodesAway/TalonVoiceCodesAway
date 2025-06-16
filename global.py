@@ -2,6 +2,7 @@ import subprocess
 
 from talon import Context, Module, actions, app, settings
 from talon.scripting.types import SettingValue
+import os.path
 
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
@@ -79,3 +80,7 @@ class Actions:
     def hide_subtitles_codesaway():
         """Hides subtitles"""
         ctx_subtitles.settings["user.subtitles_show"] = False
+
+    def get_directory(pathname: str) -> str:
+        """Gets directory name for specified pathname"""
+        return os.path.dirname(pathname)
