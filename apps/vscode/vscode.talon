@@ -25,7 +25,7 @@ save sin:                                       user.vscode("workbench.action.fi
 # Requires changing PowerToys Run command (switched to Win-space)
 maximize:
     key("alt-space")
-    sleep(100ms)
+    sleep(500ms)
     key("up:2 enter")
 
 slot {self.letter} [{self.letter}]:
@@ -93,3 +93,5 @@ git discard:                                    user.vscode("git.clean")
 file copy relative [path]:                      user.vscode("copyRelativeFilePath")
 file new:                                       user.vscode("workbench.action.files.newUntitledFile")
 this format:                                    user.vscode("editor.action.formatDocument")
+
+toggle comment:                                 code.toggle_comment()

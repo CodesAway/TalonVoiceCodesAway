@@ -39,8 +39,6 @@ cancel:                                         key("escape")
 
 boom:                                           insert(", ")
 
-apps:                                           key("menu")
-
 all select:                                     edit.select_all()
 this bold:                                      user.cmd_ctrl_key("b")
 this copy:                                      edit.copy()

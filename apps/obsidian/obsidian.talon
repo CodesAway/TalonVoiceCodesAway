@@ -17,3 +17,8 @@ please <user.text>:
     key(ctrl-p)
     sleep(50ms)
     insert("{text}")
+
+move up:                                        key("alt-up")
+move down:                                      key("alt-down")
+
+settings open:                                  key("ctrl-,")
