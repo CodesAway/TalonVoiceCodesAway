@@ -1,8 +1,8 @@
+import os.path
 import subprocess
 
 from talon import Context, Module, actions, app, settings
 from talon.scripting.types import SettingValue
-import os.path
 
 mod = Module()
 mod.list("codesaway_symbol_key", desc="extra symbol keys")
@@ -84,3 +84,10 @@ class Actions:
     def get_directory(pathname: str) -> str:
         """Gets directory name for specified pathname"""
         return os.path.dirname(pathname)
+
+    def cmd_ctrl_key(key: str):
+        """Press the specified key with the correct modifier key for the OS"""
+        if app.platform == "mac":
+            actions.key(f"cmd-{key}")
+        else:
+            actions.key(f"ctrl-{key}")

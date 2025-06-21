@@ -7,31 +7,8 @@ os: windows
     user.sleep_all()
     user.exec("Rundll32.exe user32.dll,LockWorkStation")
 
-# None is always microphone #1
-# (allows turning off mic when watching video to prevent accidental wake up)
-# (can click mic icon in Talon HUD to set back to System Default)
-mic none please:                                sound.set_microphone("None")
-# System Default is always microphone #2
-mic default:                                    sound.set_microphone("System Default")
-
-sub show:                                       user.show_subtitles_codesaway()
-sub hide:                                       user.hide_subtitles_codesaway()
-
 key(ctrl-alt-space):                            user.hud_toggle_microphone()
 key(ctrl-shift-space):                          user.screenshot()
-
-# Reference: https://github.com/talonhub/community/blob/main/core/edit/edit.talon
-# (has other edit commands)
-<number_small> up:                              key("up:{number_small}")
-<number_small> down:                            key("down:{number_small}")
-<number_small> left:                            key("left:{number_small}")
-<number_small> right:                           key("right:{number_small}")
-
-# Shift + key
-<number_small> ups:                             key("shift-up:{number_small}")
-<number_small> downs:                           key("shift-down:{number_small}")
-<number_small> lefts:                           key("shift-left:{number_small}")
-<number_small> rights:                          key("shift-right:{number_small}")
 
 # Ctrl + key (usually moves cursor)
 [<number_small>] word delete:                   key("ctrl-backspace:{number_small or 1}")
@@ -53,64 +30,19 @@ key(ctrl-shift-space):                          user.screenshot()
 [<number_small>] word lefts:                    key("ctrl-shift-left:{number_small or 1}")
 [<number_small>] word rights:                   key("ctrl-shift-right:{number_small or 1}")
 
-# Tab
-[<number_small>] (tabby left | shift tabby):    key("shift-tab:{number_small or 1}")
-[<number_small>] tabby [right]:                 key("tab:{number_small or 1}")
-
-<number_small> delete:                          key("backspace:{number_small}")
-[<number_small>] deli:                          key("delete:{number_small or 1}")
-
+# Tab switching
 [<number_small>] tab (last | left):             key("ctrl-pageup:{number_small or 1}")
 [<number_small>] tab (next | right):            key("ctrl-pagedown:{number_small or 1}")
-tab close:                                      key("ctrl-w")
-tab (reopen | restore):                         key("ctrl-shift-t")
-
-go back:                                        key("alt-left")
-go forward:                                     key("alt-right")
-
-this focus:                                     key("down up")
-cancel:                                         key("escape")
-
-boom:                                           insert(", ")
-
-# PowerToys Run
-# (used instead of Fluent Search which TRS didn't allow and got me fired)
-# TODO: need to implements
-# run show:                                       key("alt-space")
-
-# CopyQ Custom global hotkey
-# clip show:                                      key("ctrl-alt-shift-f10")
 
 apps:                                           key("menu")
 
-all select:                                     edit.select_all()
-this bold:                                      key("ctrl-b")
-this copy:                                      edit.copy()
-this new:                                       key("ctrl-n")
-this open:                                      key("ctrl-o")
-this print:                                     key("ctrl-p")
-this save:                                      edit.save()
-this paste:                                     edit.paste()
 [<number_small>] redo:                          key("ctrl-y:{number_small or 1}")
 [<number_small>] undo:                          key("ctrl-z:{number_small or 1}")
+
 this rename:                                    key("f2")
 this refresh:                                   key("f5")
-
-# Referenced: community\tags\find\find.talon
-hunt <user.text>$:
-    key("ctrl-f")
-    sleep(50ms)
-    insert(text)
-
-# Referenced: community\tags\find_and_replace\find_and_replace.talon
-hunt all <user.text>:
-    key("ctrl-shift-f")
-    sleep(50ms)
-    insert(text)
 
 super hunt <user.text>:
     key("super")
     sleep(500ms)
     insert(text)
-
-<user.codesaway_number_prose_prefixed>:         "{codesaway_number_prose_prefixed}"
