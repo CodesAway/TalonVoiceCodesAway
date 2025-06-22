@@ -106,15 +106,15 @@ class Actions:
             actions.user.namer_show_variables()
 
     # TODO: Need way to get variables so can filter and search for them
-    def namer_get_variable(variable: str):
+    def namer_get_variable(variable: str) -> str:
         """Gets namer variable"""
         return namer_variables[variable]
 
-    def namer_get_variables(variables: list[str], joiner: str = ""):
+    def namer_get_variables(variables: list[str], joiner: str = "") -> str:
         """Gets namer variables"""
         return joiner.join([namer_variables[variable] for variable in variables])
 
-    def namer_set_variable(variable: str, value: str) -> None:
+    def namer_set_variable(variable: str, value: str):
         """
         Sets namer variable
         """
