@@ -39,10 +39,7 @@ namer peek {user.namer_variable}:
     value = user.namer_get_variable(namer_variable)
     insert(value)
 
-namer peek <user.text>:
-    value = user.namer_get_variable(text)
-    insert(value)
-
+# TODO: should I change to "namer peek" (and remove above command)?
 namer {user.namer_variable}+:
     value = user.namer_get_variables(namer_variable_list)
     insert(value)
@@ -53,3 +50,11 @@ namer snip {user.snippet}:                      user.namer_insert_snippet(snippe
 namer make <user.text>:
     snip = edit.selected_text()
     user.namer_make_snippet(text, snip)
+
+into namer {user.namer_variable}:
+    value = user.fetch_flow()
+    user.namer_set_variable(namer_variable, value)
+
+into namer <user.text>:
+    value = user.fetch_flow()
+    user.namer_set_variable(text, value)

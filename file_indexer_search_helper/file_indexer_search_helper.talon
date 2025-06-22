@@ -37,3 +37,7 @@ fisher index:                                   user.fisher_index_files()
 fisher <number_small> {user.fisher_program}:
     pathname = user.fisher_get_search_result_pathname(number_small)
     user.fisher_open_file(pathname, fisher_program)
+
+fisher <number_small> flows:
+    pathname = user.fisher_get_search_result_pathname(number_small)
+    user.fill_flow(pathname)
