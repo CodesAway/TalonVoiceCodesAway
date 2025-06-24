@@ -35,14 +35,10 @@ namer copy <user.text>:                         user.namer_copy_variable(text)
 namer clip {user.namer_variable}:               user.namer_clipboard_variable(namer_variable)
 namer clip <user.text>:                         user.namer_clipboard_variable(text)
 
-namer peek {user.namer_variable}:
-    value = user.namer_get_variable(namer_variable)
-    insert(value)
-
-# TODO: should I change to "namer peek" (and remove above command)?
-namer {user.namer_variable}+:
+namer peek {user.namer_variable}+:
+    user.namer_hide_variables()
     value = user.namer_get_variables(namer_variable_list)
-    insert(value)
+    user.paste(value)
 
 # Reference: community\core\snippets\snippets.talon
 namer snip {user.snippet}:                      user.namer_insert_snippet(snippet)
