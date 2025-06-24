@@ -17,5 +17,7 @@ class Actions:
     # TODO: how to handle if flow_queue is empty? (currently shows error, which I think is correct)
     def fetch_flow() -> str:
         "Fetches the flow text"
-        app.notify("Cannot fetch from flow (since empty)")
+        if not flow_queue:
+            app.notify("Cannot fetch from flow (since empty)")
+
         return flow_queue.popleft()
