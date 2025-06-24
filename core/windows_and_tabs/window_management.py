@@ -66,12 +66,12 @@ class Actions:
         foreground_apps = ui.apps(background=False)
 
         for cur_app in foreground_apps:
-            if cur_app.exe == expand_path:
-                logging.debug(f"Focus: {path}")
+            if cur_app.exe.lower() == expand_path:
+                # logging.debug(f"Focus: {path}")
                 cur_app.focus()
                 return
 
-        logging.debug(f"Launch: {path}")
+        # logging.debug(f"Launch: {path}")
         actions.user.switcher_launch(expand_path)
 
     # TODO: how to specify that it really is a tuple[str, str]?
@@ -117,6 +117,14 @@ class Actions:
         Minimize all windows
         """
         actions.key("win-d")
+
+    def focus_title(title: str) -> None:
+        """
+        Focus on window with specified title
+        """
+        window = hunt_window(title)
+        if window:
+            window.focus()
 
 
 def normalize_title(title):

@@ -10,10 +10,10 @@ window right:                                   user.snap_window_to_position_twi
 [window] minimize [<user.text>]:                user.minimize_title(text or "")
 minimize all:                                   user.minimize_all()
 
+# Added since noticed Windows settings window isn't part of user.running_applications (not sure why though...)
+focus <user.text>:                              user.focus_title(text)
+
 # # Window
-# "window left": R(Function(maximize_title)) + R(Key("w-left")),
-# "window right": R(Function(maximize_title)) + R(Key("w-right")),
-# "window close": R(Function(close_window)),
 # "window restore": R(Function(restore_window)),
 # "app <executable>": R(Function(focus_executable)),
 # "focus [on] <title>": R(Function(focus_title)),
