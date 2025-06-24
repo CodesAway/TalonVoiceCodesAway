@@ -1,13 +1,7 @@
 ^fisher$:                                       user.fisher_toggle_search_results()
-
-fisher clip:
-    search_text = clip.text()
-    user.fisher_search(search_text)
-
+fisher clip:                                    user.fisher_search(clip.text())
 fisher hunt <user.text_codesaway>:              user.fisher_draft(text_codesaway)
-
 fisher show:                                    user.fisher_draft("")
-
 fisher hide:                                    user.draft_hide()
 
 fisher submit:
@@ -20,6 +14,7 @@ fisher submit:
 # (such as if want to open Python files using vscode)
 # Could also add FISHer specific defaults, so always opens in VSCode, even though system will open in Python executable
 fisher <number_small>:
+    user.fisher_hide_search_results()
     pathname = user.fisher_get_search_result_pathname(number_small)
     user.fisher_open_file(pathname)
 
@@ -32,12 +27,16 @@ fisher copy folder <number_small>:
     pathname = user.get_directory(pathname)
     clip.set_text(pathname)
 
-fisher index:                                   user.fisher_index_files()
+fisher index:
+    app.notify("FISHer indexing...")
+    user.fisher_index_files()
 
 fisher <number_small> {user.fisher_program}:
+    user.fisher_hide_search_results()
     pathname = user.fisher_get_search_result_pathname(number_small)
     user.fisher_open_file(pathname, fisher_program)
 
 fisher <number_small> flows:
+    user.fisher_hide_search_results()
     pathname = user.fisher_get_search_result_pathname(number_small)
     user.fill_flow(pathname)
