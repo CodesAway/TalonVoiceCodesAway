@@ -29,7 +29,10 @@ def get_tutorial_phrase(tag: TalonAdventureGameMetroid):
         #     {"help close"},
         #     "Here you can see the Talon alphabet...\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <help close> to close the dialog and continue",
         # ),
-        # TODO: cache this since only derived based on something set when game starts (don't need to calculate each time)
+        (
+            {"continue"},
+            "Let's play a game! We'll spell each word, remove it, and for each letter in the word,\ngo to the next word. Repeat until we run out of words.\nThis will help you practice the Talon alphabet.\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <continue> to continue",
+        ),
         lambda: tutorial_alpha_start(tag),
         (
             {"continue"},
@@ -63,13 +66,44 @@ def tutorial_alpha_start(tag: TalonAdventureGameMetroid):
     tutorial_alpha = tag.game_state["tutorial_alpha"]
     return (
         {f"say {word}": True for word in tutorial_alpha}.keys(),
-        f"Let's play a game! We'll spell each word, remove it, and for each letter in the word,\ngo to the next word. Repeat until we run out of words.\nThis will help you practice the Talon alphabet.\nWord list: {' '.join(tutorial_alpha)}\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <say `word`> for one of the above words\n(such as <say {next(iter(tutorial_alpha))}> to start playing)",
+        f"Word list:\n{' '.join(tutorial_alpha)}\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <say `word`> for one of the above words\n(such as <say {next(iter(tutorial_alpha))}> to start playing)",
+        set_initial_alpha_word,
     )
 
 
+def set_initial_alpha_word(tag: TalonAdventureGameMetroid):
+    # Get second word (first word is "say")
+    tag.game_state["tutorial_alpha_word"] = tag.handle_post_phrase["phrase"][1]
+    print(f"Set initial alpha word to {tag.game_state['tutorial_alpha_word']}")
+
+
+def continue_alpha_game(tag: TalonAdventureGameMetroid):
+    tutorial_alpha = tag.game_state["tutorial_alpha"]
+    current_word = tag.game_state["tutorial_alpha_word"]
+    print(f"Continue alpha game with current word: {current_word}")
+
+    letters = {value: key for key, value in registry.lists["user.letter"][0].items()}
+    expected_phrase = " ".join([letters[c] for c in current_word])
+
+    tag.expected_phrases = {expected_phrase}
+    tutorial_text = f"Word list:\n{' '.join(tutorial_alpha)}\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <{expected_phrase}> to spell the current word: {current_word})\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <{expected_phrase}> to spell the current word: {current_word})\nƸ̵̡Ӝ̵̨̄Ʒ→ Say <{expected_phrase}> to spell the current word: {current_word})"
+    show_tag_tutorial(tag, tutorial_text)
+
+    # TODO: wait for draft widow to be active (seems to be selecting wrong field sometimes)
+    actions.sleep(1.0)
+    # TODO: calculate anchor based on current_word and tutorial_text
+    anchor = "a"
+    actions.user.draft_select(anchor)
+
+
 def start_tutorial(tag: TalonAdventureGameMetroid):
+    print(f"In start_tutorial: {tag.game_state=}")
     if "tutorial_alpha" not in tag.game_state:
         tag.game_state["tutorial_alpha"] = minimum_word_span()
+
+    if "tutorial_alpha_word" in tag.game_state:
+        continue_alpha_game(tag)
+        return
 
     tutorial_phrase = get_tutorial_phrase(tag)
 
@@ -83,8 +117,14 @@ def start_tutorial(tag: TalonAdventureGameMetroid):
 
     tag.expected_phrases = tutorial_phrase[0]
     tutorial_text = tutorial_phrase[1]
-    tag.victory_sleep_time = tutorial_phrase[2] if len(tutorial_phrase) >= 3 else 0
+    if len(tutorial_phrase) >= 3:
+        tag.game_state["victory_callback"] = tutorial_phrase[2]
+    # tag.victory_sleep_time = tutorial_phrase[2] if len(tutorial_phrase) >= 3 else 0
 
+    show_tag_tutorial(tag, tutorial_text)
+
+
+def show_tag_tutorial(tag: TalonAdventureGameMetroid, tutorial_text: str):
     # Actions of "draft show large"
     # actions.user.draft_hide()
     # Added since was getting issues with text not displaying (due to error in logs)

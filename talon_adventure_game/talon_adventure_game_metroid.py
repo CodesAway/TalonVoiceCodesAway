@@ -56,6 +56,7 @@ class TalonAdventureGameMetroid:
             victory_callback(self)
 
         tag.state_index += 1
+        print(f"New state index: {tag.state_index}")
         tag.handle_post_phrase = None
 
         # if tag.victory_sleep_time:
@@ -106,7 +107,7 @@ def pre_phrase(phrase: Phrase):
 def post_phrase(phrase: Phrase):
     if phrase == tag.handle_post_phrase:
         tag.set_next_step()
-        # tag.game_state.pop("victory_callback", None)
+        tag.game_state.pop("victory_callback", None)
 
 
 def handle_expected_phrase(phrase: Phrase):
