@@ -10,3 +10,6 @@ open (earl | url | link):                       key(ctrl-u)
 link open:                                      key(ctrl-u)
 copy (earl | url | link):                       key(ctrl-shift-u)
 link copy:                                      key(ctrl-shift-u)
+
+user copy:                                      key(ctrl-b)
+password copy:                                  key(ctrl-c)

@@ -74,7 +74,8 @@ class Actions:
         ctx_subtitles.settings = {
             "user.subtitles_show": True,
             "user.subtitles_timeout_min": 1500,
-            "user.subtitles_y": 0.90,
+            # Time travel?
+            "user.subtitles_y": 0.88,
         }
 
     def hide_subtitles_codesaway():

@@ -20,6 +20,7 @@ class Actions:
         actions.user.help_hide()
         actions.user.mouse_sleep()
         actions.speech.disable()
+        actions.user.hide_subtitles_codesaway()
         # actions.user.engine_sleep() # Comment out since otherwise disables twice and Talon shows notification
 
     def wake_all():
