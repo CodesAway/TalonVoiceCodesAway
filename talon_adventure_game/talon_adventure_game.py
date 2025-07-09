@@ -5,6 +5,8 @@ from collections import deque
 from dataclasses import dataclass
 from operator import attrgetter
 
+from skia import Canvas as SkiaCanvas
+from skia import Paint, Rect
 from talon import (
     Context,
     Module,
@@ -15,8 +17,6 @@ from talon import (
     ui,  # type: ignore
 )
 from talon.canvas import Canvas
-from talon.skia import Canvas as SkiaCanvas
-from talon.skia import Paint, Rect
 
 mod = Module()
 mod.list("tag_game_command", "Commands for Talon Adventure Game")
