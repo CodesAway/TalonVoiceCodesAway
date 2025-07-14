@@ -5,8 +5,10 @@ from collections import deque
 from dataclasses import dataclass
 from operator import attrgetter
 
-from skia import Canvas as SkiaCanvas
-from skia import Paint, Rect
+# Beta throws warning and says to import directly from skia
+# Non-beta breaks if you do this...so, we live with warning for now
+from talon.skia import Canvas as SkiaCanvas
+from talon.skia import Paint, Rect
 from talon import (
     Context,
     Module,
