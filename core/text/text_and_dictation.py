@@ -9,8 +9,19 @@ from ....community.core.text.text_and_dictation import capture_to_words, format_
 mod = Module()
 
 
+# Reference: community\core\text\text_and_dictation.py
+# Added to allow customized rules to reference the original user.text rule (to avoid WARNING parser recursion: user.text)
+@mod.capture(
+    rule="({user.vocabulary} | <user.prose_contact> | <user.prose_spell> | <user.prose_clipboard> | <phrase>)+"
+)
+def text_original(m) -> str:
+    """A sequence of words, including user-defined vocabulary."""
+    return format_phrase(m)
+
+
 # Tweaked from original
-@mod.capture(rule="spell {user.letter}+")
+# @mod.capture(rule="spell {user.letter}+")
+@mod.capture(rule="(spell | {user.letter}) {user.letter}+")
 def spell(m) -> str:
     """Spell word phoneticly"""
     return "".join(m.letter_list)
@@ -23,6 +34,8 @@ text_rule_parts = [
     "<user.spell>",
     "<user.number_prefix>",
     "<phrase>",
+    "<user.codesaway_number_prose_prefixed>",
+    "<user.format_text_codesaway>",
 ]
 
 text_rule = f"({'|'.join(text_rule_parts)})+"
