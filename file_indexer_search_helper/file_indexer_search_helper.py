@@ -14,6 +14,7 @@ from talon import (
     actions,
     app,  # type: ignore
     cron,  # type: ignore
+    fs,
     imgui,  # type: ignore
     registry,
     ui,  # type: ignore
@@ -51,12 +52,12 @@ mod.list(
 fisher_subprocess: subprocess.Popen = None
 fisher_search_text = ""
 fisher_draft_search_text = ""
-fisher_search_results: list[dict[str, str]] = None
+fisher_search_results: list[dict[str, str]] = []
 
 # Runtime priorities of file extension
 # (can be changed on-the-fly without reindex, since passed into SQL query)
 # TODO: move to talon_list file
-priority_file_extensions = ["exe", "lnk", "md", "talon", "chm"]
+priority_file_extensions = ["exe", "pdf", "lnk", "md", "talon", "chm"]
 
 # TODO: support deleted directories (should delete from database)
 # For example, if doesn't iterate due to ignoring directory
@@ -67,9 +68,26 @@ priority_file_extensions = ["exe", "lnk", "md", "talon", "chm"]
 # Treat index as priority (so lower index has higher priority)
 # If not in list, has lowest priority
 # Join string helps make SQL pretty formatted (useful when debugging)
+# TODO: ensure that "e" is escaped
 priority_file_extensions_sql = ",\n    ".join(
     [f"('{e}', {i})" for i, e in enumerate(priority_file_extensions)]
 )
+
+# Note: -e.priority desc will sort NULL / no priority last (since descending)
+# Negative ensures that, for example, priority 0 comes before priority 1
+# (since 0 > -1, so when sorting descending will be earlier)
+FULL_TEXT_SEARCH = f"""
+with extension_xref (extension, priority) as
+(values
+    {priority_file_extensions_sql}
+)
+SELECT rowid, e.priority, f.directory, f.name, f.extension, f.size, f.modified_time, f.rank, e.priority
+FROM {TABLE_NAME}(?) f
+left join extension_xref e on e.extension = f.extension
+order by f.rank, -e.priority desc
+limit 10
+"""
+
 
 COUNT_BY_DIRECTORY = f"""
 select f.directory, count(1) as count
@@ -137,10 +155,7 @@ def fisher_gui_search_results(gui: imgui.GUI):
     gui.text(fisher_search_text.replace("\n", " "))
     gui.line()
 
-    search_results = search(fisher_search_text)
-    fisher_search_results = search_results
-
-    for i, search_result in enumerate(search_results):
+    for i, search_result in enumerate(fisher_search_results):
         directory = search_result["directory"]
         filename = search_result["filename"]
 
@@ -152,8 +167,8 @@ def fisher_gui_search_results(gui: imgui.GUI):
         # This matches what's done in the Google Files app
         # humanreadable library is available as dependency in beta, but not regular version
         # Write my own, but reference
-        size = search_result["size"]
-        modified_time = search_result["modified_time"]
+        size = int(search_result["size"])
+        modified_time = int(search_result["modified_time"])
         gui.text(f"{filename} ({format_size(size)}, {format_datetime(modified_time)})")
 
         gui.line()
@@ -243,30 +258,16 @@ def index_files():
 # Enable paging (like done for help)
 # This may help make results easier to read
 def search(search_text: str) -> list[dict[str, str]]:
-    # Note: -e.priority desc will sort NULL / no priority last (since descending)
-    # Negative ensures that, for example, priority 0 comes before priority 1
-    # (since 0 > -1, so when sorting descending will be earlier)
-    FULL_TEXT_SEARCH = f"""
-    with extension_xref (extension, priority) as
-    (values
-        {priority_file_extensions_sql}
-    )
-    SELECT rowid, e.priority, f.directory, f.name, f.extension, f.size, f.modified_time
-    FROM {TABLE_NAME}("{search_text}") f
-    left join extension_xref e on e.extension = f.extension
-    order by f.rank, -e.priority desc
-    limit 10
-    """
-
     search_results = []
 
     with sqlite3.connect(database_pathname) as connection:
-        cursor = connection.execute(FULL_TEXT_SEARCH)
+        cursor = connection.execute(FULL_TEXT_SEARCH, (search_text,))
         for row in cursor:
             row_dict = {cursor.description[i][0]: e for i, e in enumerate(row)}
             row_dict["filename"] = determine_filename(
                 row_dict["name"], row_dict["extension"]
             )
+            # logging.debug(row_dict)
             search_results.append(row_dict)
 
         return search_results
@@ -300,7 +301,7 @@ def on_ready():
 
     cron.interval("600s", index_files)
 
-    # fs.watch(actions.path.talon_user(), on_watch)
+    fs.watch(actions.path.talon_user(), on_watch)
 
     # search("ada dis*")
 
@@ -337,6 +338,8 @@ def process_modified_files():
     process_modified_files = set(process_modified_files)
 
     print("Process modified files:")
+    # TODO: You can notified when files are deleted as well!
+    # This allows full processing (if file doesn't exist, delete from index)
     for path in process_modified_files:
         print(path)
 
@@ -352,7 +355,10 @@ class Actions:
 
     def fisher_show_search_results():
         """Shows the GUI for fisher search results"""
+        global fisher_search_results
         if fisher_search_text:
+            search_results = search(fisher_search_text)
+            fisher_search_results = search_results
             fisher_gui_search_results.show()
         else:
             actions.user.fisher_draft("")
