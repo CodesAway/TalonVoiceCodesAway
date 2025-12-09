@@ -13,3 +13,4 @@ link copy:                                      key(ctrl-shift-u)
 
 user copy:                                      key(ctrl-b)
 password copy:                                  key(ctrl-c)
+this new:                                       key(ctrl-i)

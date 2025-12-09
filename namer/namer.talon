@@ -54,3 +54,7 @@ into namer {user.namer_variable}:
 into namer <user.text>:
     value = user.fetch_flow()
     user.namer_set_variable(text, value)
+
+namer {user.namer_variable} flows:
+    value = user.namer_get_variable(namer_variable)
+    user.fill_flow(value)

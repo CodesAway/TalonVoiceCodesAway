@@ -1,14 +1,5 @@
 tag: user.cursorless
 -
-replace <user.cursorless_target> with <user.cursorless_target>:
-    destination = user.cursorless_create_destination(cursorless_target_1)
-    value = user.cursorless_get_text(cursorless_target_2)
-    user.cursorless_insert(destination, value)
-
-replace <user.cursorless_target> with <user.text_code_codesaway>:
-    destination = user.cursorless_create_destination(cursorless_target)
-    user.cursorless_insert(destination, text_code_codesaway)
-
 title <user.cursorless_target>:
     value = user.cursorless_get_text(cursorless_target)
     value = user.formatted_text(value, "CAPITALIZE_ALL_WORDS")
@@ -38,3 +29,7 @@ diff <user.cursorless_target>:
 diff with <user.cursorless_target>:
     user.cursorless_command("setSelection", cursorless_target)
     user.vscode("extension.partialDiff.markSection2AndTakeDiff")
+
+test run <user.cursorless_target>:
+    user.cursorless_command("setSelection", cursorless_target)
+    user.vscode("testing.runAtCursor")

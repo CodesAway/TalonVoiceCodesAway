@@ -27,6 +27,7 @@ ctx.lists["user.open_apps"] = {
     "winmerge": f"{DROPBOX_PROGRAMS_DIRECTORY}/WinMergePortable/App/WinMerge/WinMergeU.exe",
     "explore": f"{DROPBOX_PROGRAMS_DIRECTORY}/FreeCommanderPortable/FreeCommanderPortable.exe",
     "keepass": f"{DROPBOX_PROGRAMS_DIRECTORY}/KeePass/KeePass.exe",
+    "music": "%LocalAppData%/youtube_music_desktop_app/youtube-music-desktop-app.exe",
 }
 
 launch_apps_scope = ["obsidian", "task manager", "word", "code", "spotify", "git hub"]

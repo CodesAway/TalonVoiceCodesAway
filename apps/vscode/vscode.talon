@@ -53,6 +53,8 @@ view (next | down):                             key(ctrl-down)
 group (last | previous | prev):                 user.vscode("workbench.action.focusPreviousGroup")
 group next:                                     user.vscode("workbench.action.focusNextGroup")
 group close other:                              user.vscode("workbench.action.closeEditorsInOtherGroups")
+group move left:                                user.vscode("workbench.action.moveEditorToLeftGroup")
+group move right:                               user.vscode("workbench.action.moveEditorToRightGroup")
 
 recent editor (last | previous | prev):         user.vscode("workbench.action.openPreviousRecentlyUsedEditor")
 recent editor next:                             user.vscode("workbench.action.openNextRecentlyUsedEditor")

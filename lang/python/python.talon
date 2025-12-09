@@ -30,3 +30,8 @@ if <user.text_code_codesaway>:
 
 else if <user.text_code_codesaway>:
     user.insert_between("elif {text_code_codesaway}", ":")
+
+<user.text_code_codesaway> dot <user.text_code_codesaway>:
+    variable = user.formatted_text(text_code_codesaway_1, 'SNAKE_CASE')
+    member = user.formatted_text(text_code_codesaway_2, 'SNAKE_CASE')
+    insert("{variable}.{member}")

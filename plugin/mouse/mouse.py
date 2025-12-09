@@ -145,10 +145,10 @@ class Actions:
 
         if user_mouse_mode:
             ctx.tags = ["user.mouse_mode"]
-            logging.debug("user_mouse_mode")
+            logging.debug("user.mouse_mode")
         elif not auto_mouse_mode:
             ctx.tags = []
-            logging.debug("done user_mouse_mode")
+            logging.debug("done user.mouse_mode")
 
     def relative_mouse_move_direction(direction: str, amount: int = 0):
         """Move the cursor to the relative position in the specified direction"""
