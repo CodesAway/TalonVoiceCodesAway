@@ -46,3 +46,9 @@ super hunt <user.text>:
     key("super")
     sleep(500ms)
     insert(text)
+
+(go | open) <user.system_path>:
+    # args = ["explorer", system_path]
+    # print(args)
+    # user.run(args)
+    user.run2("explorer", system_path)

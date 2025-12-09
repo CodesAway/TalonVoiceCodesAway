@@ -33,7 +33,12 @@ def number_prose_with_dash(m) -> str:
     return "-".join(m.number_string_list)
 
 
-@mod.capture(rule="<user.number_prose_with_dash>")
+@mod.capture(rule="<user.number_string> (slash <user.number_string>)+")
+def number_prose_with_slash(m) -> str:
+    return "/".join(m.number_string_list)
+
+
+@mod.capture(rule="<user.number_prose_with_dash>|<user.number_prose_with_slash>")
 def codesaway_number_prose_unprefixed(m) -> str:
     return m[0]
 
@@ -62,6 +67,20 @@ class Actions:
         child_processes.append(
             subprocess.Popen(command, shell=True),
         )
+
+    # TODO: how to implement and pass as list???
+    def run2(command1: str, command2: str):
+        """Execute command"""
+        # TODO: look into using dynamic lists
+        command_list = [command1, command2]
+        subprocess.run(command_list)
+
+    # def run(command_list: list[str]):
+    #     """Execute command"""
+    #     # Store child process handle to avoid log warning about subprocess still running
+    #     child_processes.append(
+    #         subprocess.run(command_list),
+    #     )
 
     def get_setting(setting_name: str) -> SettingValue:
         """Gets setting with specified name"""
