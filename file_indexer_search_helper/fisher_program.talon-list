@@ -5,3 +5,4 @@ default:                                        default
 chrome:                                         C:\Program Files\Google\Chrome\Application\chrome.exe
 code:                                           %LocalAppData%\Programs\Microsoft VS Code\Code.exe
 inkscape:                                       %Dropbox%\Programs\InkscapePortable\InkscapePortable.exe
+PDFXEdit:                                       %Dropbox%\Programs\PDFXEdit10_Portable_x64\PDFXEdit.exe

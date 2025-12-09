@@ -1,6 +1,6 @@
 list: user.fisher_file_extension
 -
 
-pdf:                                            chrome
+pdf:                                            PDFXEdit
 py:                                             code
 svg:                                            inkscape
