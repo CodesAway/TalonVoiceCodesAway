@@ -54,7 +54,7 @@ hunt <user.text>:                               edit.find(text)
 # Referenced: community\tags\find_and_replace\find_and_replace.talon
 hunt all <user.text>:
     user.cmd_ctrl_key("shift-f")
-    (50ms)
+    sleep(50ms)
     insert(text)
 
 <user.codesaway_number_prose_prefixed>:         "{codesaway_number_prose_prefixed}"
@@ -66,7 +66,6 @@ selection flows:
     value = edit.selected_text()
     user.fill_flow(value)
 
-dot gov: insert('.gov')
+dot gov:                                        insert('.gov')
 
-path <user.system_path>: insert('"{system_path}"')
-
+path <user.system_path>:                        insert('"{system_path}"')
