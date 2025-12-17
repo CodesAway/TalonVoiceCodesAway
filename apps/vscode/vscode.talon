@@ -98,3 +98,4 @@ file new:                                       user.vscode("workbench.action.fi
 this format:                                    user.vscode("editor.action.formatDocument")
 
 toggle comment:                                 code.toggle_comment()
+this reveal:                                    user.vscode("revealFileInOS")
