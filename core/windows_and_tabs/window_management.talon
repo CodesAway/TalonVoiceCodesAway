@@ -5,6 +5,10 @@
 # Noticed that if maximized, needs to be snapped twice to be correct (noticed all windows on Windows 11)
 window left:                                    user.snap_window_to_position_twice("LEFT")
 window right:                                   user.snap_window_to_position_twice("RIGHT")
+
+window (up | top):                              user.snap_window_to_position_twice("TOP")
+window (down | bottom):                         user.snap_window_to_position_twice("BOTTOM")
+
 # TODO: Noticed maximize doesn't work for VSCode, but other windows no issue (maybe not targetting the right window of the app??)
 [window] maximize [<user.text>]:                user.maximize_title(text or "")
 [window] minimize [<user.text>]:                user.minimize_title(text or "")

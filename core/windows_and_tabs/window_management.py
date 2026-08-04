@@ -30,7 +30,7 @@ ctx.lists["user.open_apps"] = {
     "music": "%LocalAppData%/youtube_music_desktop_app/youtube-music-desktop-app.exe",
 }
 
-launch_apps_scope = ["obsidian", "task manager", "word", "code", "spotify", "git hub"]
+launch_apps_scope = ["obsidian", "task manager", "word", "code", "spotify", "git hub", "slack"]
 ctx.lists["user.launch_apps_scope"] = launch_apps_scope
 
 # Populated on first run (don't worry about updating for now)
@@ -50,6 +50,7 @@ def launcher_apps(app) -> tuple[str, str]:
         for e in registry.lists["user.launch"][0].items():
             if e[0] in launch_apps_scope:
                 launch_apps[e[0]] = e[1]
+                # logging.debug(f"Loaded launch app: {e[0]} -> {e[1]}")
 
     # Convert from Capture to string
     app_name = str(app)
