@@ -5,15 +5,29 @@ import sqlite3
 import sys
 import time
 from collections import defaultdict
+from contextlib import closing
+from dataclasses import dataclass
 from operator import itemgetter
 from pathlib import Path
 from sqlite3 import Connection
 from typing import Any
 
+script_directory = Path(__file__).resolve().parent
+
+logger = logging.getLogger("file_indexer_search_helper")
+logger.setLevel(logging.DEBUG)
+
+file_handler = logging.FileHandler(script_directory / "file_indexer_search_helper.log")
+file_handler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter("[Background] %(asctime)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 # TODO: add support for full reindex via voice (set all version numbers to 0)
 # (dropping table should only be needed in rare updates when table structure changes)
-should_drop_table = False
-should_perform_full_reindex = False
+# should_drop_table = False
+# should_perform_full_reindex = False
 
 # Directories containing the following parts will NOT be indexed
 # CacheStorage / "Code Cache" is used by Google Chrome (and other programs)
@@ -47,48 +61,164 @@ ignore_directories = {
     # r"C:\Windows\WinSxS\Manifests",
 }
 
-# Use map for better performance
+# Use set for better performance
+# TODO: only lowercase on Windows (or use os.path.normcase)
 ignore_directory_parts_map = {e.lower() for e in ignore_directory_parts}
 
+# TODO: only lowercase on Windows (or use os.path.normcase)
 ignore_directories_map = {os.path.expandvars(e).lower() for e in ignore_directories}
 
-# Constant for table name inside SQLite database
-TABLE_NAME = "file"
-# TODO: does the user ever need to change this (or is this when I update the code?)
-# Store version number in Talon database (via storage) to allow first time upgrades such as dropping table or full
-VERSION = 1
+# Logic from esshop (though not sure if this is the best way to do it)
+# (ideally would have static class variables, though this looked complicated and unsure if needed)
 
-# https://www.geeksforgeeks.org/sqlite-full-text-search/
-CREATE_VIRTUAL_TABLE = f"""
-CREATE VIRTUAL TABLE IF NOT EXISTS {TABLE_NAME}
-USING FTS5(directory, name, extension, size UNINDEXED, modified_time UNINDEXED, version UNINDEXED, tokenize = 'porter trigram');
+# Changed from list to tuple to make immutable (even during instantiation)
+STORED_COLUMNS = (
+    "directory",
+    "name",
+    "extension",
+    "size",
+    "modified_time",
+    "version",
+)
+
+# TODO: add generated columns as needed
+GENERATED_COLUMNS = ()
+COLUMNS = STORED_COLUMNS + GENERATED_COLUMNS
+# logger.debug(f"FISHer COLUMNS: {COLUMNS}")
+
+# Turned into frozenset to make immutable (even during instantiation)
+UNINDEXED_COLUMNS = frozenset(
+    {
+        "size",
+        "modified_time",
+        "version",
+    }
+)
+
+FTS_COLUMNS = frozenset(
+    column_name for column_name in COLUMNS if column_name not in UNINDEXED_COLUMNS
+)
+# logger.debug(f"FISHer FTS_COLUMNS: {FTS_COLUMNS}")
+
+
+@dataclass(frozen=True)
+class FisherSettings:
+    table_name = "file"
+
+    # Don't add type hint to make immutable (even during instantiation)
+    # TODO: find better way?
+    select_count = f"select count(1) as count from {table_name}"
+
+    # TODO: change to actual constant (so cannot be modified at runtime)
+    # Constant for table name inside SQLite database
+
+    # TODO: does the user ever need to change this (or is this when I update the code?)
+    # Store version number in Talon database (via storage) to allow first time upgrades such as dropping table or full
+    version = 1
+
+    # Logic from esshop
+    FTS_TABLE_NAME = f"{table_name}_fts_idx"
+    # TODO: changed from list to tuple to make immutable (even during instantiation)
+    # In order to use as a class variable, need to use field(default_factory=...) to avoid mutable default value
+    # (need to also use for anything which relies on this, such as OLD_FTS_COLUMN_NAMES and NEW_FTS_COLUMN_NAMES)
+    # FTS_COLUMNS: ClassVar[tuple[str, ...]] = field(
+    #     default_factory=lambda: tuple(
+    #         column_name
+    #         for column_name in FisherSettings.COLUMNS
+    #         if column_name not in FisherSettings.UNINDEXED_COLUMNS
+    #     )
+    # )
+
+    COLUMN_NAMES = ",".join([column_name for column_name in COLUMNS])
+    FTS_COLUMN_NAMES = ",".join([column_name for column_name in FTS_COLUMNS])
+    OLD_FTS_COLUMN_NAMES = ",".join(
+        ["old." + column_name for column_name in FTS_COLUMNS]
+    )
+    NEW_FTS_COLUMN_NAMES = ",".join(
+        ["new." + column_name for column_name in FTS_COLUMNS]
+    )
+
+    DROP_TRIGGERS = f"""
+    DROP TRIGGER IF EXISTS {table_name}_insert;
+    DROP TRIGGER IF EXISTS {table_name}_delete;
+    DROP TRIGGER IF EXISTS {table_name}_update;
+    """
+
+    REINDEX_FTS = f"""
+    DROP TABLE IF EXISTS {FTS_TABLE_NAME};
+    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{table_name}', tokenize = 'porter trigram');
+    INSERT INTO {FTS_TABLE_NAME}({FTS_TABLE_NAME}) VALUES('rebuild');
+    """
+
+    # TODO: why does the delete trigger perfom an update??
+    # Is there a better way to write these
+    # Reference https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
+    # (though the update looks wrong in the article...why is it an insert?)
+    CREATE_TRIGGERS = f"""
+    CREATE TRIGGER {table_name}_insert AFTER INSERT ON {table_name} BEGIN
+        INSERT INTO {FTS_TABLE_NAME}(rowid, {FTS_COLUMN_NAMES}) VALUES (new.rowid, {NEW_FTS_COLUMN_NAMES});
+    END;
+    CREATE TRIGGER {table_name}_delete AFTER DELETE ON {table_name} BEGIN
+        INSERT INTO {FTS_TABLE_NAME}({FTS_TABLE_NAME}, rowid, {FTS_COLUMN_NAMES}) VALUES('delete', old.rowid, {OLD_FTS_COLUMN_NAMES});
+    END;
+    CREATE TRIGGER {table_name}_update AFTER UPDATE ON {table_name} BEGIN
+        INSERT INTO {FTS_TABLE_NAME}({FTS_TABLE_NAME}, rowid, {FTS_COLUMN_NAMES}) VALUES('delete', old.rowid, {OLD_FTS_COLUMN_NAMES});
+        INSERT INTO {FTS_TABLE_NAME}(rowid, {FTS_COLUMN_NAMES}) VALUES (new.rowid, {NEW_FTS_COLUMN_NAMES});
+    END;
+    """
+
+    # TODO: can add generated columns after drop triggers
+    # (remember to first drop columns in reverse order of creation)
+    CREATE_FULL_TEXT_SEARCH = f"""
+    DROP TABLE IF EXISTS {table_name};
+    CREATE TABLE IF NOT EXISTS {table_name}(rowid INTEGER PRIMARY KEY, {COLUMN_NAMES});
+
+    {DROP_TRIGGERS}
+
+    {REINDEX_FTS}
+
+    {CREATE_TRIGGERS}
+
 """
 
-SELECT_COUNT = f"select count(1) as count from {TABLE_NAME}"
+
+# https://www.geeksforgeeks.org/sqlite-full-text-search/
+# create_virtual_table = f"""
+# CREATE VIRTUAL TABLE IF NOT EXISTS {table_name}
+# USING FTS5(directory, name, extension, size UNINDEXED, modified_time UNINDEXED, version UNINDEXED, tokenize = 'porter trigram');
+# """
+
+
+fisher_settings = FisherSettings()
 
 
 def create_database(database_pathname):
-    with sqlite3.connect(database_pathname) as connection:
-        if should_drop_table:
-            connection.execute(f"DROP TABLE IF EXISTS {TABLE_NAME}")
-            connection.commit()
+    with closing(sqlite3.connect(database_pathname)) as connection:
+        # if should_drop_table:
+        #     connection.execute(f"DROP TABLE IF EXISTS {fisher_settings.table_name}")
+        #     connection.commit()
 
-        connection.execute(CREATE_VIRTUAL_TABLE)
+        # logger.debug(fisher_settings.CREATE_TRIGGERS)
+
+        connection.executescript(fisher_settings.CREATE_FULL_TEXT_SEARCH)
+        # connection.execute(fisher_settings.create_virtual_table)
         connection.commit()
-        logging.debug(
-            f"FISHer Existing: {connection.execute(SELECT_COUNT).fetchone()[0]}"
+        logger.debug(
+            f"FISHer Existing: {connection.execute(fisher_settings.select_count).fetchone()[0]}"
         )
 
         # https://www.techonthenet.com/sqlite/auto_vacuum.php
         connection.execute("VACUUM")
         connection.commit()
 
-        if should_perform_full_reindex:
-            connection.execute(f"update {TABLE_NAME} set version = 0")
-            connection.commit()
+        # if should_perform_full_reindex:
+        #     connection.execute(f"update {fisher_settings.table_name} set version = 0")
+        #     connection.commit()
 
 
-def create_file_dictionary(directory: str, filename: str) -> dict[str, Any]:
+def create_file_dictionary(
+    directory: str, filename: str, handle_deleted_files=False
+) -> dict[str, Any]:
     pathname = os.path.join(directory, filename)
     name, extension = os.path.splitext(filename)
 
@@ -96,17 +226,21 @@ def create_file_dictionary(directory: str, filename: str) -> dict[str, Any]:
     if len(extension) > 1:
         extension = extension[1:]
 
-    size = os.path.getsize(pathname)
-    modified_time = os.path.getmtime(pathname)
+    if handle_deleted_files and not os.path.isfile(pathname):
+        size = -1
+        modified_time = -1
+    else:
+        size = os.path.getsize(pathname)
+        modified_time = os.path.getmtime(pathname)
 
-    return dict(
-        directory=directory,
-        name=name,
-        extension=extension,
-        size=size,
-        modified_time=modified_time,
-        version=VERSION,
-    )
+    return {
+        "directory": directory,
+        "name": name,
+        "extension": extension,
+        "size": size,
+        "modified_time": modified_time,
+        "version": fisher_settings.version,
+    }
 
 
 def determine_filename(name: str, extension: str):
@@ -118,9 +252,9 @@ def query_existing_files(
 ) -> defaultdict[str, list[dict[str, Any]]]:
     existing_files = defaultdict(list[dict[str, Any]])
 
-    with sqlite3.connect(database_pathname) as connection:
+    with closing(sqlite3.connect(database_pathname)) as connection:
         cursor = connection.execute(
-            f"select rowid, directory, name, extension, size, modified_time, version from {TABLE_NAME}"
+            f"select rowid, directory, name, extension, size, modified_time, version from {fisher_settings.table_name}"
         )
         for row in cursor:
             row_dict = {cursor.description[i][0]: e for i, e in enumerate(row)}
@@ -144,8 +278,8 @@ def filter_index_directories(directory: str, dirs: list[str]) -> list[str]:
 
 def index_directory_files(
     directory: str,
-    files: list[str],
-    existing_rows: list[dict[str, Any]],
+    files: list[str],  # Comes in already sorted
+    existing_rows: list[dict[str, Any]],  # Comes in already sorted by filename
     update_count_mutable: list[int],  # Single index
     insert_files: list[dict[str, Any]],
     delete_records: set[int],
@@ -161,7 +295,7 @@ def index_directory_files(
                     create_file_dictionary(directory, files[pathwalk_index])
                 )
             except OSError as e:
-                print(f"An error occurred: {e}")
+                logger.error(f"An error occurred: {e}")
 
             pathwalk_index += 1
             continue
@@ -187,7 +321,7 @@ def index_directory_files(
                     create_file_dictionary(directory, files[pathwalk_index])
                 )
             except OSError as e:
-                print(f"An error occurred: {e}")
+                logger.error(f"An error occurred: {e}")
             pathwalk_index += 1
         elif pathwalk_filename > existing_filename:
             # For example "DEF" on pathwalk and "ABC" on database
@@ -206,7 +340,7 @@ def index_directory_files(
             existing_index += 1
 
             file_has_change = (
-                record["version"] != VERSION
+                record["version"] != fisher_settings.version
                 or record["size"] != file_dictionary["size"]
                 or record["modified_time"] != file_dictionary["modified_time"]
             )
@@ -232,7 +366,7 @@ def index_files(database_pathname: str):
     # root_pathname = "%appdata%/talon/user"
     root_path = Path(os.path.expandvars(root_pathname))
 
-    insert_files = []
+    insert_files: list[dict[str, Any]] = []
     # Create SortedSet (values will always be True; alows ensuring there are not duplicates, which suggests an issue)
     delete_records: set[int] = set()
     update_count_mutable = [0]
@@ -241,7 +375,7 @@ def index_files(database_pathname: str):
     # https://stackoverflow.com/a/1731989
     existing_files = query_existing_files(database_pathname)
 
-    logging.debug(f"FISHer walk: {root_path}")
+    logger.debug(f"FISHer walk: {root_path}")
 
     # TODO: replace path.walk with os.walk
     # (since Talon is currently on Python 3.11 and path.walk was added in 3.12)
@@ -297,12 +431,11 @@ def index_files(database_pathname: str):
 
     # get the execution time
     elapsed_time = end_time - start_time
-    logging.debug(f"FISHer Execution time: {elapsed_time} seconds")
+    logger.debug(f"FISHer Execution time: {elapsed_time} seconds")
 
 
 # TODO: implement method to index_files_batch based on passed deque
-
-
+# Note: cannot use actual upsert on virtual table
 def upsert_database(
     database_pathname: str,
     update_count: int,
@@ -310,12 +443,12 @@ def upsert_database(
     delete_records: set[int],
 ):
     connection: Connection
-    with sqlite3.connect(database_pathname) as connection:
+    with closing(sqlite3.connect(database_pathname)) as connection:
         # https://stackoverflow.com/a/52479382
         # https://stackoverflow.com/a/16856730
         # (need to convert into list of tuples of size 1)
         connection.executemany(
-            f"delete from {TABLE_NAME} where rowid = ?",
+            f"delete from {fisher_settings.table_name} where rowid = ?",
             [(d,) for d in delete_records],
         )
 
@@ -323,7 +456,7 @@ def upsert_database(
         # https://stackoverflow.com/a/53963137
         connection.executemany(
             f"""
-            insert into {TABLE_NAME}(directory, name, extension, size, modified_time, version)
+            insert into {fisher_settings.table_name}(directory, name, extension, size, modified_time, version)
             values (:directory, :name, :extension, :size, :modified_time, :version)
             """,
             insert_files,
@@ -331,11 +464,54 @@ def upsert_database(
 
         connection.commit()
 
-        logging.debug(f"FISHer Updated {update_count} files in database")
-        logging.debug(f"FISHer Inserted {len(insert_files) - update_count} files")
-        logging.debug(
+        logger.debug(f"FISHer Updated {update_count} files in database")
+        logger.debug(f"FISHer Inserted {len(insert_files) - update_count} files")
+        logger.debug(
             f"FISHer Deleted {len(delete_records) - update_count} records from database"
         )
+
+
+def upsert_records(
+    database_pathname: str,
+    upsert_files: list[dict[str, Any]],
+):
+    # Takes 26 seconds for 1000 files (think related to delete and need indexes or something)
+    start_time = time.perf_counter()
+
+    connection: Connection
+    with closing(sqlite3.connect(database_pathname)) as connection:
+        # logger.debug("upsert_records: Before delete")
+        # TODO: improve performance issue (first try by refactoring table into data table and separate fts index)
+        # This way, can index directory and name columns, which should fix performance issues
+        connection.executemany(
+            f"""
+            delete from {fisher_settings.table_name}
+            where directory = :directory
+            and name = :name
+            """,
+            upsert_files,
+        )
+        # logger.debug("upsert_records: After delete")
+
+        # logger.debug("upsert_records: Before insert")
+        connection.executemany(
+            f"""
+            insert into {fisher_settings.table_name}(directory, name, extension, size, modified_time, version)
+            values (:directory, :name, :extension, :size, :modified_time, :version)
+            """,
+            # size = -1 (special marker to indicate file no longer exists)
+            [e for e in upsert_files if e["size"] != -1],
+        )
+        # logger.debug("upsert_records: After insert")
+
+        connection.commit()
+
+    end_time = time.perf_counter()
+
+    elapsed_time = end_time - start_time
+    logger.debug(
+        f"upsert_records: Time taken: {elapsed_time:.6f} seconds (files {len(upsert_files)})"
+    )
 
 
 unlink_fisher_path: Path = None
@@ -354,10 +530,8 @@ def determine_fisher_lock_path(database_pathname: str) -> Path:
 def main():
     global unlink_fisher_path
 
-    logging.getLogger().setLevel(logging.DEBUG)
-
     if len(sys.argv) != 2:
-        logging.debug("Pass DB pathname as parameter")
+        logger.debug("Pass DB pathname as parameter")
         return
 
     database_pathname = sys.argv[1]
@@ -365,7 +539,7 @@ def main():
     fisher_lock_path = determine_fisher_lock_path(database_pathname)
     try:
         if fisher_lock_path.exists():
-            logging.error(f"Indexer is already running, see {fisher_lock_path}")
+            logger.error(f"Indexer is already running, see {fisher_lock_path}")
             return
 
         with fisher_lock_path.open("x") as file:
@@ -374,11 +548,16 @@ def main():
             pid = os.getpid()
             file.write(str(pid))
 
-        print("Database pathname:", database_pathname)
-        create_database(database_pathname)
+        logger.debug("Database pathname:", database_pathname)
+        if not Path(database_pathname).exists():
+            create_database(database_pathname)
         index_files(database_pathname)
+
+        # TODO: optimize database after each bulk run
+        # https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     # finally:
     #     input("Press enter to exit")
 

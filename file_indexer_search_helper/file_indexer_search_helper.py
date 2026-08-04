@@ -7,7 +7,9 @@ import sqlite3
 import subprocess
 import sys
 from collections import deque
+from contextlib import closing
 from pathlib import Path
+from typing import Any
 
 from talon import (
     Module,
@@ -21,9 +23,11 @@ from talon import (
 )
 
 from .file_indexer_search_helper_background import (
-    TABLE_NAME,
+    create_file_dictionary,
     determine_filename,
     determine_fisher_lock_path,
+    fisher_settings,
+    upsert_records,
 )
 
 has_humanfriendly = False
@@ -69,6 +73,7 @@ priority_file_extensions = ["exe", "pdf", "lnk", "md", "talon", "chm"]
 # If not in list, has lowest priority
 # Join string helps make SQL pretty formatted (useful when debugging)
 # TODO: ensure that "e" is escaped
+# TODO: new design doesn't need the "extension" column (see what to do)
 priority_file_extensions_sql = ",\n    ".join(
     [f"('{e}', {i})" for i, e in enumerate(priority_file_extensions)]
 )
@@ -81,8 +86,9 @@ with extension_xref (extension, priority) as
 (values
     {priority_file_extensions_sql}
 )
-SELECT rowid, e.priority, f.directory, f.name, f.extension, f.size, f.modified_time, f.rank, e.priority
-FROM {TABLE_NAME}(?) f
+SELECT rowid, e.priority, f.directory, f.name, f.extension, p.size, p.modified_time, f.rank, e.priority
+FROM {fisher_settings.FTS_TABLE_NAME}(?) f
+join {fisher_settings.table_name} p on p.rowid = f.rowid
 left join extension_xref e on e.extension = f.extension
 order by f.rank, -e.priority desc
 limit 10
@@ -91,15 +97,16 @@ limit 10
 
 COUNT_BY_DIRECTORY = f"""
 select f.directory, count(1) as count
-from {TABLE_NAME} f
+from {fisher_settings.table_name} f
 group by f.directory
 order by count(1) desc
 limit 25
 """
 
+# TODO: need to modify query since removing extension (2026-08-03)
 COUNT_BY_EXTENSION = f"""
 select f.directory, f.extension, count(1) as count
-from {TABLE_NAME} f
+from {fisher_settings.table_name} f
 group by f.directory, f.extension
 order by count(1) desc
 limit 25
@@ -260,7 +267,7 @@ def index_files():
 def search(search_text: str) -> list[dict[str, str]]:
     search_results = []
 
-    with sqlite3.connect(database_pathname) as connection:
+    with closing(sqlite3.connect(database_pathname)) as connection:
         cursor = connection.execute(FULL_TEXT_SEARCH, (search_text,))
         for row in cursor:
             row_dict = {cursor.description[i][0]: e for i, e in enumerate(row)}
@@ -270,27 +277,36 @@ def search(search_text: str) -> list[dict[str, str]]:
             # logging.debug(row_dict)
             search_results.append(row_dict)
 
-        return search_results
+    return search_results
 
-        # print()
-        # print("Directories:")
-        # for result in connection.execute(COUNT_BY_DIRECTORY).fetchall():
-        #     print(result)
+    # print()
+    # print("Directories:")
+    # for result in connection.execute(COUNT_BY_DIRECTORY).fetchall():
+    #     print(result)
 
-        # print()
-        # print("Extensions:")
-        # for result in connection.execute(COUNT_BY_EXTENSION).fetchall():
-        #     print(result)
+    # print()
+    # print("Extensions:")
+    # for result in connection.execute(COUNT_BY_EXTENSION).fetchall():
+    #     print(result)
 
 
 def on_ready():
-    global database_pathname
+    global database_pathname, ignore_fisher_paths
 
     # TODO: have user setting
     # (if relative path, make relative to talon user; if absolute, should override, please test)
+    # TODO: should the DB and log be in the same directory? (maybe talon_home would be a better location)
     database_pathname = os.path.join(
         actions.path.talon_user(), "file_indexer_search_helper.db"
     )
+    # Ignore files related to FISHer (since otherwise would get stuck in cycle of handling modified files)
+    ignore_fisher_paths = (
+        Path(database_pathname),
+        Path(database_pathname + "-journal"),
+        determine_fisher_lock_path(database_pathname),
+        Path(__file__).resolve().parent / "file_indexer_search_helper.log",
+    )
+    logging.info(f"FISHer Ignore: {ignore_fisher_paths}")
 
     # TODO: add support for watching directories with recent changes
     # (to allow a dynamic list of instant updates in addition to the 10 minute polling)
@@ -302,18 +318,26 @@ def on_ready():
     cron.interval("600s", index_files)
 
     fs.watch(actions.path.talon_user(), on_watch)
+    fs.watch("C:\\Users\\cross\\Dropbox\\Documents", on_watch)
 
     # search("ada dis*")
 
 
-modified_files = deque()
+modified_files: deque[Path] = deque()
 modified_files_job = None
 
 
 def on_watch(path, flags):
     global modified_files_job
+    path = Path(path)
 
     # print(f"{path} ({flags})")
+    if path in ignore_fisher_paths:
+        return
+
+    # if True:
+    #     return
+
     modified_files.append(path)
 
     # Handle modified files in batch group
@@ -327,6 +351,7 @@ def on_watch(path, flags):
 def process_modified_files():
     global modified_files_job
     modified_files_job = None
+    # TODO: if `file` table doesn't exist, cannot do (such as if modify file before database is created)
     process_modified_files = deque(modified_files)
     # Remove files, since will be already processed
     # Pop from left since these were added first
@@ -337,11 +362,24 @@ def process_modified_files():
     # Handle duplicates
     process_modified_files = set(process_modified_files)
 
-    print("Process modified files:")
-    # TODO: You can notified when files are deleted as well!
+    logging.debug("Process modified files:")
+    # TODO: You get notified when files are deleted as well!
     # This allows full processing (if file doesn't exist, delete from index)
+    upsert_files: list[dict[str, Any]] = []
+
     for path in process_modified_files:
-        print(path)
+        # logging.debug(path)
+        try:
+            upsert_files.append(
+                create_file_dictionary(
+                    str(path.parent), path.name, handle_deleted_files=True
+                )
+            )
+            # logging.debug(upsert_files[-1])
+        except OSError as e:
+            logging.error(f"An error occurred: {e}")
+
+    upsert_records(database_pathname, upsert_files)
 
 
 app.register("ready", on_ready)
