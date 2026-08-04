@@ -47,11 +47,11 @@ namer make <user.text>:
     snip = edit.selected_text()
     user.namer_make_snippet(text, snip)
 
-into namer {user.namer_variable}:
+through namer {user.namer_variable}:
     value = user.fetch_flow()
     user.namer_set_variable(namer_variable, value)
 
-into namer <user.text>:
+through namer <user.text>:
     value = user.fetch_flow()
     user.namer_set_variable(text, value)
 
