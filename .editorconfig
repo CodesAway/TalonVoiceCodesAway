@@ -1,0 +1,8 @@
+root = true
+
+[*.talon]
+# https://github.com/cursorless-dev/talon-tools?tab=readme-ov-file#formatting-options
+column_width = 48
+
+[*.talon-list]
+column_width = 48
