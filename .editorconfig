@@ -1,8 +1,10 @@
+# See https://editorconfig.org
 root = true
 
 [*.talon]
-# https://github.com/cursorless-dev/talon-tools?tab=readme-ov-file#formatting-options
+# TODO: May change (rango.talon has 123 characters and not wrapped)
 max_line_length = 125
+# https://github.com/cursorless-dev/talon-tools?tab=readme-ov-file#formatting-options
 column_width = 48
 
 [*.talon-list]
