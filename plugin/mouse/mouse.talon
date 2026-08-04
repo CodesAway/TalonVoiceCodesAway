@@ -32,14 +32,17 @@ mouse slower:                                   user.mouse_move_speed(-1)
 mouse speed reset:                              user.mouse_move_speed(0)
 
 [flex] grid close:
-    user.flex_grid_deactivate()
+    # user.flex_grid_deactivate()
     user.grid_close()
 
 grid off:
-    user.flex_grid_deactivate()
+    # user.flex_grid_deactivate()
     user.grid_close()
 
 zero mouse move:
     user.mouse_move_stop()
-    user.flex_grid_deactivate()
+    # user.flex_grid_deactivate()
     user.grid_close()
+
+<number_small> wheel up: user.mouse_scroll_up(number_small)
+<number_small> wheel down: user.mouse_scroll_down(number_small)
