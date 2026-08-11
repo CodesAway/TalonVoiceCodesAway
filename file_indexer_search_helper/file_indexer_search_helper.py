@@ -23,10 +23,9 @@ from talon import (
 )
 
 from .file_indexer_search_helper_background import (
-    create_file_dictionary,
-    determine_filename,
+    FISHER_MODEL,
+    create_path_dictionary,
     determine_fisher_lock_path,
-    fisher_settings,
     upsert_records,
 )
 
@@ -86,10 +85,10 @@ with extension_xref (extension, priority) as
 (values
     {priority_file_extensions_sql}
 )
-SELECT rowid, e.priority, f.directory, f.name, f.extension, p.size, p.modified_time, f.rank, e.priority
-FROM {fisher_settings.FTS_TABLE_NAME}(?) f
-join {fisher_settings.table_name} p on p.rowid = f.rowid
-left join extension_xref e on e.extension = f.extension
+SELECT rowid, e.priority, f.directory, f.name, p.extension, p.size, p.modified_time, f.rank, e.priority
+FROM {FISHER_MODEL.FTS_TABLE_NAME}(?) f
+join {FISHER_MODEL.table_name} p on p.rowid = f.rowid
+left join extension_xref e on e.extension = p.extension
 order by f.rank, -e.priority desc
 limit 10
 """
@@ -97,7 +96,7 @@ limit 10
 
 COUNT_BY_DIRECTORY = f"""
 select f.directory, count(1) as count
-from {fisher_settings.table_name} f
+from {FISHER_MODEL.table_name} f
 group by f.directory
 order by count(1) desc
 limit 25
@@ -106,7 +105,7 @@ limit 25
 # TODO: need to modify query since removing extension (2026-08-03)
 COUNT_BY_EXTENSION = f"""
 select f.directory, f.extension, count(1) as count
-from {fisher_settings.table_name} f
+from {FISHER_MODEL.table_name} f
 group by f.directory, f.extension
 order by count(1) desc
 limit 25
@@ -124,11 +123,12 @@ SIZE_PREFIXES = ["", "k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
 
 def format_size(size: int) -> str:
     index = 0
-    while size >= 1000 and index + 1 < len(SIZE_PREFIXES):
-        size /= 1000
+    formatted_size: float = size
+    while formatted_size >= 1000 and index + 1 < len(SIZE_PREFIXES):
+        formatted_size /= 1000
         index += 1
 
-    return f"{round(size, 2)} {SIZE_PREFIXES[index]}B"
+    return f"{round(formatted_size, 2)} {SIZE_PREFIXES[index]}B"
 
 
 def format_datetime(seconds: float) -> str:
@@ -138,7 +138,7 @@ def format_datetime(seconds: float) -> str:
         if diff < 60:
             return "seconds ago"
 
-        return f"{humanfriendly.format_timespan(now - seconds, max_units=1)} ago"
+        return f"{humanfriendly.format_timespan(now - seconds, max_units=1)} ago"  # type: ignore
 
     seconds_datetime = datetime.datetime.fromtimestamp(seconds)
 
@@ -164,7 +164,7 @@ def fisher_gui_search_results(gui: imgui.GUI):
 
     for i, search_result in enumerate(fisher_search_results):
         directory = search_result["directory"]
-        filename = search_result["filename"]
+        filename = search_result["name"]
 
         gui.text(f"{i + 1:<5d}{directory}")
         # TODO: include size, relative date in parentheses
@@ -192,7 +192,7 @@ def handle_stale_fisher_lock() -> bool:
         * True if stale lock has been handled (meaning it's okay to start another process)
         * False if the lock remains (meaning another process is still running and a new one should not be started)
     """
-    fisher_lock_path = determine_fisher_lock_path(database_pathname)
+    fisher_lock_path = determine_fisher_lock_path(database_path)
 
     if not fisher_lock_path.exists():
         return True
@@ -253,7 +253,7 @@ def index_files():
         if not python_executable.exists() and try_python_executable.exists():
             python_executable = try_python_executable
 
-    fisher_command = [python_executable, file_path, database_pathname]
+    fisher_command = [python_executable, file_path, database_path]
     # TODO: add error handling (in case script breaks)
     fisher_subprocess = subprocess.Popen(fisher_command, shell=True)
     logging.debug(
@@ -267,15 +267,10 @@ def index_files():
 def search(search_text: str) -> list[dict[str, str]]:
     search_results = []
 
-    with closing(sqlite3.connect(database_pathname)) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.row_factory = sqlite3.Row
         cursor = connection.execute(FULL_TEXT_SEARCH, (search_text,))
-        for row in cursor:
-            row_dict = {cursor.description[i][0]: e for i, e in enumerate(row)}
-            row_dict["filename"] = determine_filename(
-                row_dict["name"], row_dict["extension"]
-            )
-            # logging.debug(row_dict)
-            search_results.append(row_dict)
+        return [dict(row) for row in cursor]
 
     return search_results
 
@@ -291,22 +286,22 @@ def search(search_text: str) -> list[dict[str, str]]:
 
 
 def on_ready():
-    global database_pathname, ignore_fisher_paths
+    global database_path, FISHER_MODEL
 
     # TODO: have user setting
     # (if relative path, make relative to talon user; if absolute, should override, please test)
     # TODO: should the DB and log be in the same directory? (maybe talon_home would be a better location)
-    database_pathname = os.path.join(
-        actions.path.talon_user(), "file_indexer_search_helper.db"
-    )
+    database_path = Path(actions.path.talon_home()) / "file_indexer_search_helper.db"
+
     # Ignore files related to FISHer (since otherwise would get stuck in cycle of handling modified files)
-    ignore_fisher_paths = (
-        Path(database_pathname),
-        Path(database_pathname + "-journal"),
-        determine_fisher_lock_path(database_pathname),
-        Path(__file__).resolve().parent / "file_indexer_search_helper.log",
-    )
-    logging.info(f"FISHer Ignore: {ignore_fisher_paths}")
+    # ignore_fisher_paths = (
+    #     database_path,
+    #     # TODO: is there a better way to write this?
+    #     Path(str(database_path) + "-journal"),
+    #     determine_fisher_lock_path(database_path),
+    #     Path(__file__).resolve().parent / "file_indexer_search_helper.log",
+    # )
+    # logging.info(f"FISHer Ignore: {ignore_fisher_paths}")
 
     # TODO: add support for watching directories with recent changes
     # (to allow a dynamic list of instant updates in addition to the 10 minute polling)
@@ -332,8 +327,8 @@ def on_watch(path, flags):
     path = Path(path)
 
     # print(f"{path} ({flags})")
-    if path in ignore_fisher_paths:
-        return
+    # if path in ignore_fisher_paths:
+    #     return
 
     # if True:
     #     return
@@ -345,24 +340,28 @@ def on_watch(path, flags):
         cron.cancel(modified_files_job)
 
     # Wait 2 seconds to see if other files are modified (such as during a code checkout / update)
-    modified_files_job = cron.after("2000ms", process_modified_files)
+    # (no longer need to wait after performance changes)
+    # modified_files_job = cron.after("2000ms", process_modified_files)
+    modified_files_job = cron.after("0ms", process_modified_files)
 
 
 def process_modified_files():
     global modified_files_job
+    # TODO: how to handle if FISHer is already locked (doing batch run)
+    # (should it just wait 2 seconds and try again?)
     modified_files_job = None
     # TODO: if `file` table doesn't exist, cannot do (such as if modify file before database is created)
     process_modified_files = deque(modified_files)
     # Remove files, since will be already processed
     # Pop from left since these were added first
     # Don't use clear, since more modified files may be added as we're processing, so don't want to clear these
-    for i in range(len(process_modified_files)):
+    for _ in range(len(process_modified_files)):
         modified_files.popleft()
 
     # Handle duplicates
     process_modified_files = set(process_modified_files)
 
-    logging.debug("Process modified files:")
+    # logging.debug("FISHer process modified files:")
     # TODO: You get notified when files are deleted as well!
     # This allows full processing (if file doesn't exist, delete from index)
     upsert_files: list[dict[str, Any]] = []
@@ -370,16 +369,11 @@ def process_modified_files():
     for path in process_modified_files:
         # logging.debug(path)
         try:
-            upsert_files.append(
-                create_file_dictionary(
-                    str(path.parent), path.name, handle_deleted_files=True
-                )
-            )
-            # logging.debug(upsert_files[-1])
+            upsert_files.append(create_path_dictionary(path))
         except OSError as e:
             logging.error(f"An error occurred: {e}")
 
-    upsert_records(database_pathname, upsert_files)
+    upsert_records(database_path, upsert_files)
 
 
 app.register("ready", on_ready)
@@ -425,12 +419,12 @@ class Actions:
         """Gets the search results pathname at the specified index"""
         if not fisher_search_results:
             logging.debug("FISHer has no search results")
-            return None
+            return ""
 
         # Subtract 1 to convert from 1-based to 0-based index
         fisher_search_result = fisher_search_results[index - 1]
         return os.path.join(
-            fisher_search_result["directory"], fisher_search_result["filename"]
+            fisher_search_result["directory"], fisher_search_result["name"]
         )
 
     def open_file_default_program(pathname: str):
