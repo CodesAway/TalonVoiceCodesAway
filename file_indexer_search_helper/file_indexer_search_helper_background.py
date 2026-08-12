@@ -400,13 +400,9 @@ def index_files(
 
 # TODO: this handles the incremental indexing
 def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
-    # Takes 26 seconds for 1000 files (think related to delete and need indexes or something)
     start_time = time.perf_counter()
 
     with closing(sqlite3.connect(database_path)) as connection, connection:
-        # logger.debug("upsert_records: Before delete")
-        # TODO: improve performance issue (first try by refactoring table into data table and separate fts index)
-        # This way, can index directory and name columns, which should fix performance issues
         connection.executemany(
             f"""
             delete from {FISHER_MODEL.table_name}
@@ -415,15 +411,12 @@ def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
             """,
             upsert_files,
         )
-        # logger.debug("upsert_records: After delete")
 
-        # logger.debug("upsert_records: Before insert")
         connection.executemany(
             FISHER_MODEL.INSERT_RECORDS,
             # size = -1 (special marker to indicate file no longer exists)
             [e for e in upsert_files if e["size"] != -1],
         )
-        # logger.debug("upsert_records: After insert")
 
         connection.commit()
 
