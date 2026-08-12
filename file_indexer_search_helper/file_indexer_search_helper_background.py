@@ -1,4 +1,3 @@
-import atexit
 import logging
 import os
 import queue
@@ -439,22 +438,11 @@ def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
     )
 
 
-unlink_fisher_path: Path = Path()
-
-
-@atexit.register
-def on_close():
-    if unlink_fisher_path:
-        unlink_fisher_path.unlink()
-
-
 def determine_fisher_lock_path(database_path: Path) -> Path:
     return database_path.with_name("FISHer.lck")
 
 
 def main():
-    global unlink_fisher_path, logger
-
     if len(sys.argv) != 2:
         logger.debug("Pass DB path as parameter")
         return
@@ -479,13 +467,14 @@ def main():
     # database_path.unlink(missing_ok=True)
 
     fisher_lock_path = determine_fisher_lock_path(database_path)
+    unlink_fisher_lock_path = None
     try:
         if fisher_lock_path.exists():
             logger.error(f"Indexer is already running, see {fisher_lock_path}")
             return
 
         with fisher_lock_path.open("x") as file:
-            unlink_fisher_path = fisher_lock_path
+            unlink_fisher_lock_path = fisher_lock_path
 
             pid = os.getpid()
             file.write(str(pid))
@@ -502,11 +491,11 @@ def main():
 
         # TODO: optimize database after each bulk run
         # https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
-
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.error(f"An error occurred: {e}")
-    # finally:
-    #     input("Press enter to exit")
+    finally:
+        if unlink_fisher_lock_path:
+            unlink_fisher_lock_path.unlink()
 
 
 if __name__ == "__main__":
