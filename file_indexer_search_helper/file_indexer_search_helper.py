@@ -52,14 +52,14 @@ mod.list(
     "Map from file extension to user.fisher_programs key",
 )
 
-fisher_subprocess: subprocess.Popen = None
+fisher_subprocess: subprocess.Popen | None = None
 fisher_search_text = ""
 fisher_draft_search_text = ""
 fisher_search_results: list[dict[str, str]] = []
 
 # Runtime priorities of file extension
 # (can be changed on-the-fly without reindex, since passed into SQL query)
-# TODO: move to talon_list file
+# TODO: move to talon_list file (ensure has input validation before putting into SQL)
 priority_file_extensions = ["exe", "pdf", "lnk", "md", "talon", "chm"]
 
 # TODO: support deleted directories (should delete from database)
