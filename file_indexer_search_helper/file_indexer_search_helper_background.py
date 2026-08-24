@@ -171,7 +171,7 @@ def update_database_worker(
     update_queue.task_done()
 
 
-def index_files(
+def background_index_files(
     database_path: Path,
     root_dir: str,
     process_batch_fn: WorkerCallable,
@@ -623,7 +623,7 @@ def main():
         if not database_path.exists():
             FISHER_MODEL.create_database(database_path)
 
-        index_files(database_path, target_dir, process_file_group)
+        background_index_files(database_path, target_dir, process_file_group)
         unlink_fisher_lock_path.unlink(missing_ok=True)
 
         # Done after lock is released, since while lock exists, could still add records to table
