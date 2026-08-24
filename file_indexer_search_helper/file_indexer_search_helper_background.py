@@ -6,8 +6,8 @@ import sys
 import threading
 import time
 from collections import deque
-from collections.abc import Callable, Iterable
-from contextlib import closing
+from collections.abc import Callable, Generator, Iterable
+from contextlib import closing, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -21,12 +21,18 @@ InsertRecord = dict[str, str | int | float]
 
 @dataclass
 class WorkerResult:
-    database_deletes: deque[DeleteRecord] = field(default_factory=deque, init=False)
-    database_inserts: deque[InsertRecord] = field(default_factory=deque, init=False)
+    database_changes: deque[DeleteRecord | InsertRecord] = field(
+        default_factory=deque, init=False
+    )
+
+    delete_counts: deque[int] = field(default_factory=deque, init=False)
+    insert_counts: deque[int] = field(default_factory=deque, init=False)
     update_counts: deque[int] = field(default_factory=deque, init=False)
 
 
-WorkerCallable = Callable[[Path, str, list[os.DirEntry], WorkerResult], int]
+WorkerCallable = Callable[
+    [Path, str, list[os.DirEntry], WorkerResult], tuple[int, int, int]
+]
 
 
 # Directories containing the following parts will NOT be indexed
@@ -75,14 +81,18 @@ def should_ignore_directory(directory: os.DirEntry) -> bool:
     )
 
 
+MIN_CHANGE_COUNT = 1000
+
+
 def worker(
     database_path: Path,
     dir_queue: queue.Queue[str],
     process_batch_fn: WorkerCallable,
     result: WorkerResult,
+    update_queue: queue.Queue[bool],
 ) -> None:
 
-    update_count = 0
+    delete_count = insert_count = update_count = 0
     # 1. Use sentinel iterator: loops until queue_get() returns None
     for current_dir in iter(dir_queue.get, ""):
         try:
@@ -98,9 +108,15 @@ def worker(
             # TODO: What if an error is thrown, should I still handle the files?
             # TODO: may need to multiprocess the process_batch_fn if it is CPU bound, but that would require more complex design
             if files:
-                update_count += process_batch_fn(
-                    database_path, current_dir, files, result
+                batch_delete_count, batch_insert_count, batch_update_count = (
+                    process_batch_fn(database_path, current_dir, files, result)
                 )
+                delete_count += batch_delete_count
+                insert_count += batch_insert_count
+                update_count += batch_update_count
+
+                if len(result.database_changes) > MIN_CHANGE_COUNT:
+                    update_queue.put(True)
 
         except (PermissionError, FileNotFoundError):
             pass
@@ -109,28 +125,74 @@ def worker(
         finally:
             dir_queue.task_done()
 
+    result.delete_counts.append(delete_count)
+    result.insert_counts.append(insert_count)
     result.update_counts.append(update_count)
 
     # 2. Acknowledge the 'None' sentinel task so dir_queue.join() unblocks cleanly
     dir_queue.task_done()
 
 
-def fast_parallel_walk(
+def update_database(
+    database_path: Path, result: WorkerResult, min_change_count=MIN_CHANGE_COUNT
+):
+    # Strictly greater than to handle min_change_count=0 meaning ALL records (final group)
+    while len(result.database_changes) > min_change_count:
+        database_deletes: deque[DeleteRecord] = deque()
+        database_inserts: deque[InsertRecord] = deque()
+
+        count = (
+            min_change_count if min_change_count > 0 else len(result.database_changes)
+        )
+        for _ in range(count):
+            change = result.database_changes.popleft()
+            if isinstance(change, tuple):  # DeleteRecord
+                database_deletes.append(change)
+            elif isinstance(change, dict):  # InsertRecord
+                database_inserts.append(change)
+            else:
+                logger.error(f"Unexpected change: {change}")
+
+        FISHER_MODEL.bulk_upsert_records(
+            database_path, database_deletes, database_inserts
+        )
+
+
+def update_database_worker(
+    database_path: Path,
+    update_queue: queue.Queue[bool],
+    result: WorkerResult,
+) -> None:
+    for _ in iter(update_queue.get, False):
+        update_database(database_path, result)
+        update_queue.task_done()
+
+    # Acknowledge the 'False' sentinel task so update_queue.join() unblocks cleanly
+    update_queue.task_done()
+
+
+def index_files(
     database_path: Path,
     root_dir: str,
     process_batch_fn: WorkerCallable,
     num_workers: int = 16,
-) -> WorkerResult:
-
+) -> None:
     dir_queue: queue.Queue[str] = queue.Queue()
     dir_queue.put(root_dir)
 
     worker_result = WorkerResult()
+    update_queue: queue.Queue[bool] = queue.Queue()
 
     threads = [
         threading.Thread(
             target=worker,
-            args=(database_path, dir_queue, process_batch_fn, worker_result),
+            args=(
+                database_path,
+                dir_queue,
+                process_batch_fn,
+                worker_result,
+                update_queue,
+            ),
             daemon=True,
         )
         for _ in range(num_workers)
@@ -138,6 +200,13 @@ def fast_parallel_walk(
 
     for t in threads:
         t.start()
+
+    update_thread = threading.Thread(
+        target=update_database_worker,
+        args=(database_path, update_queue, worker_result),
+        daemon=True,
+    )
+    update_thread.start()
 
     # 1. Wait until all active directories in the tree are fully scanned
     dir_queue.join()
@@ -153,7 +222,27 @@ def fast_parallel_walk(
     for t in threads:
         t.join()
 
-    return worker_result
+    update_queue.join()
+    update_queue.put(False)
+    update_queue.join()
+    update_thread.join()
+
+    # Process remaining changes
+    if worker_result.database_changes:
+        update_database(database_path, worker_result, 0)
+
+    deletes = sum(worker_result.delete_counts)
+    inserts = sum(worker_result.insert_counts)
+    updates = sum(worker_result.update_counts)
+
+    logger.info(f"Deleting  files: {deletes}")
+    logger.info(f"Inserting files: {inserts}")
+    logger.info(f"Updating  files: {updates}")
+
+    # TODO: need to add this after running bulk operations to improve performance and reduce fragmentation (though it may take a long time to run)
+    # https://www.techonthenet.com/sqlite/auto_vacuum.php
+    # with db_connection_transaction(FISHER_MODEL.database_path) as connection:
+    #     connection.execute("VACUUM")
 
 
 @dataclass(frozen=True)
@@ -162,7 +251,9 @@ class FisherModel:
 
     # Don't add type hint to make immutable (even during instantiation)
 
+    # TODO: may not want to call table "file" since reserved keyword in Microsoft SQL Server T-SQL
     table_name = "file"
+    ignore_table_name = "ignore_file"
 
     select_count = f"select count(1) as count from {table_name}"
 
@@ -178,6 +269,7 @@ class FisherModel:
     # Logic from esshop (though not sure if this is the best way to do it)
     # (ideally would have static class variables, though this looked complicated and unsure if needed)
 
+    # TODO: should name be renamed filename? Or no, since table is named "file"?
     STORED_COLUMNS = ("directory", "name", "size", "modified_time", "version")
 
     GENERATED_COLUMNS = ("extension",)
@@ -203,18 +295,7 @@ class FisherModel:
     OLD_FTS_COLUMN_NAMES = ",".join("old." + column_name for column_name in FTS_COLUMNS)
     NEW_FTS_COLUMN_NAMES = ",".join("new." + column_name for column_name in FTS_COLUMNS)
 
-    DROP_TRIGGERS = f"""
-    DROP TRIGGER IF EXISTS {table_name}_delete;
-    DROP TRIGGER IF EXISTS {table_name}_insert;
-    DROP TRIGGER IF EXISTS {table_name}_update;
-    """
-
     # https://www.geeksforgeeks.org/sqlite-full-text-search/
-    REINDEX_FTS = f"""
-    DROP TABLE IF EXISTS {FTS_TABLE_NAME};
-    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{table_name}', tokenize = 'porter trigram');
-    INSERT INTO {FTS_TABLE_NAME}({FTS_TABLE_NAME}) VALUES('rebuild');
-    """
 
     # Is there a better way to write these
     # Reference https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
@@ -232,55 +313,92 @@ class FisherModel:
     END;
     """
 
-    # AI suggested for performance, though not sure if needed (and may be slower in some cases)
-    # WAL mode persists across connections once set
-    # Write-Ahead Logging allows multiple threads to read concurrently while a single thread writes
-    #     PRAGMA journal_mode = WAL;
-    #     PRAGMA synchronous = NORMAL;
-
-    # TODO: can add generated columns after drop triggers
-    # (remember to first drop columns in reverse order of creation) (not needed since creating table)
     CREATE_FULL_TEXT_SEARCH = f"""
-    DROP TABLE IF EXISTS {table_name};
+
     CREATE TABLE IF NOT EXISTS {table_name}(rowid INTEGER PRIMARY KEY, {STORED_COLUMN_NAMES});
 
     CREATE UNIQUE INDEX IF NOT EXISTS ux__{table_name}__directory__name
     ON {table_name}(directory, name);
 
-    {DROP_TRIGGERS}
-
     alter table {table_name} add column extension AS (lower(substr(name, instr(name, '.') + 1)));
 
-    {REINDEX_FTS}
+    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{table_name}', tokenize = 'porter trigram');
 
     {CREATE_TRIGGERS}
+
+    CREATE TABLE IF NOT EXISTS {ignore_table_name}(rowid INTEGER PRIMARY KEY, directory, name);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS ux__{ignore_table_name}__directory__name
+    ON {ignore_table_name}(directory, name);
 """
 
-    DELETE_BY_ROWID = f"delete from {table_name} where rowid = ?"
-    INSERT_RECORDS = f"""
+    DELETE_BY_ROWID_HANDLE_IGNORE = f"""
+            delete from {table_name} as f
+            where f.rowid = ?
+            and not exists (
+                select 1
+                from {ignore_table_name} as i
+                where i.directory = f.directory
+                and i.name = f.name
+            )
+            """
+
+    INSERT_RECORDS_HANDLE_IGNORE = f"""
+            insert into {table_name}({STORED_COLUMN_NAMES})
+            select {NAMED_STORED_COLUMN_NAMES}
+            where not exists (
+                select 1
+                from {ignore_table_name}
+                where directory = :directory
+                and name = :name
+            )
+            """
+
+    INSERT_INCREMENTAL_RECORDS = f"""
             insert into {table_name}({STORED_COLUMN_NAMES})
             values ({NAMED_STORED_COLUMN_NAMES})
             """
 
-    def create_database(self, database_path: Path):
-        with (
-            closing(sqlite3.connect(database_path)) as connection,
-            connection,  # Necessary for transaction management
-        ):
-            connection.executescript(self.CREATE_FULL_TEXT_SEARCH)
+    DELETE_BY_DIRECTORY_FILENAME = f"""
+            delete from {table_name}
+            where directory = :directory
+            and name = :name
+            """
 
-    def upsert_records(
+    INSERT_IGNORE_RECORDS = f"""
+            insert or ignore into {ignore_table_name}(directory, name)
+            values (:directory, :name)
+            """
+
+    DELETE_ALL_IGNORE_RECORDS = f"DELETE FROM {ignore_table_name}"
+
+    def create_database(self, database_path: Path):
+        with db_connection(database_path) as connection:
+            # Specify outside of connection (persistent and only needs to be specified once)
+            connection.execute("PRAGMA journal_mode = WAL;")
+
+            with db_transaction(connection):
+                connection.executescript(self.CREATE_FULL_TEXT_SEARCH)
+
+    def bulk_upsert_records(
         self,
         database_path: Path,
         delete_files: Iterable[DeleteRecord],
         insert_files: Iterable[InsertRecord],
     ):
-        with (
-            closing(sqlite3.connect(database_path)) as connection,
-            connection,  # Necessary for transaction management (commits when closing)
-        ):
-            connection.executemany(self.DELETE_BY_ROWID, delete_files)
-            connection.executemany(self.INSERT_RECORDS, insert_files)
+        start_time = time.perf_counter()
+        with db_connection_transaction(database_path) as connection:
+            if delete_files:
+                connection.executemany(self.DELETE_BY_ROWID_HANDLE_IGNORE, delete_files)
+
+            if insert_files:
+                connection.executemany(self.INSERT_RECORDS_HANDLE_IGNORE, insert_files)
+
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
+
+        if elapsed_time >= 1:
+            logger.debug(f"bulk_upsert_records took {elapsed_time:.2f} seconds.")
 
 
 FISHER_MODEL = FisherModel()
@@ -323,10 +441,11 @@ def create_file_dictionary(directory: str, file: os.DirEntry) -> InsertRecord:
 def query_existing_files(
     database_path: Path, directory: str
 ) -> dict[str, dict[str, Any]]:
-    with closing(sqlite3.connect(database_path)) as connection:
-        connection.row_factory = sqlite3.Row
+    with db_query(database_path, use_row_factory=True) as connection:
         cursor = connection.execute(FISHER_MODEL.query_by_directory, (directory,))
-        return {row["name"]: dict(row) for row in cursor}
+        rows = cursor.fetchall()
+
+    return {row["name"]: dict(row) for row in rows}
 
 
 def process_file_group(
@@ -334,11 +453,12 @@ def process_file_group(
     dir_path: str,
     files: list[os.DirEntry],
     worker_result: WorkerResult,
-) -> int:
+) -> tuple[int, int, int]:
 
     existing_records = query_existing_files(database_path, dir_path)
     files_to_delete = set(existing_records.keys())
-    insert_files: list[InsertRecord] = []
+    changes: list[DeleteRecord | InsertRecord] = []
+    insert_count = 0
     update_count = 0
 
     for file in files:
@@ -350,85 +470,115 @@ def process_file_group(
 
         key = file.name
 
+        # TODO: could remove instead, which also removes need for files_to_delete
         existing_record = existing_records.get(key)
         if not existing_record:
-            insert_files.append(file_detail)
+            changes.append(file_detail)
+            insert_count += 1
             continue
 
+        files_to_delete.discard(key)
         if (
             file_detail["modified_time"] != existing_record["modified_time"]
             or file_detail["size"] != existing_record["size"]
             or file_detail["version"] != existing_record["version"]
         ):
-            # Update will perform delete first (key remains in files_to_delete)
-            insert_files.append(file_detail)
+            # Update will perform delete first
+            changes.append((existing_record["rowid"],))
+            changes.append(file_detail)
             update_count += 1
-        else:
-            files_to_delete.discard(key)
 
     delete_files: list[DeleteRecord] = [
         (record["rowid"],)  # Intentional tuple for SQLite executemany
         for record in existing_records.values()
         if record["name"] in files_to_delete
     ]
+    worker_result.database_changes.extend(delete_files)
+    worker_result.database_changes.extend(changes)
 
-    worker_result.database_deletes.extend(delete_files)
-    worker_result.database_inserts.extend(insert_files)
-
-    return update_count
-
-
-def index_files(
-    database_path: Path, root_dir: str, process_batch_fn: WorkerCallable
-) -> None:
-    result = fast_parallel_walk(database_path, root_dir, process_batch_fn)
-    updates = sum(result.update_counts)
-
-    logger.info(f"Deleting  files: {len(result.database_deletes) - updates}")
-    logger.info(f"Inserting files: {len(result.database_inserts) - updates}")
-    logger.info(f"Updating  files: {updates}")
-
-    FISHER_MODEL.upsert_records(
-        database_path, result.database_deletes, result.database_inserts
-    )
-
-    # TODO: need to add this after running bulk operations to improve performance and reduce fragmentation (though it may take a long time to run)
-    # https://www.techonthenet.com/sqlite/auto_vacuum.php
-    # with closing(sqlite3.connect(FISHER_MODEL.database_path)) as connection, connection:
-    #     connection.execute("VACUUM")
+    return (len(delete_files), insert_count, update_count)
 
 
-# TODO: this handles the incremental indexing
+# This handles the incremental indexing
 def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
     start_time = time.perf_counter()
 
-    with closing(sqlite3.connect(database_path)) as connection, connection:
-        connection.executemany(
-            f"""
-            delete from {FISHER_MODEL.table_name}
-            where directory = :directory
-            and name = :name
-            """,
-            upsert_files,
-        )
+    # size = -1 (special marker to indicate file no longer exists)
+    insert_files = [e for e in upsert_files if e["size"] != -1]
+    is_bulk_running = determine_fisher_lock_path(database_path).exists()
 
-        connection.executemany(
-            FISHER_MODEL.INSERT_RECORDS,
-            # size = -1 (special marker to indicate file no longer exists)
-            [e for e in upsert_files if e["size"] != -1],
-        )
+    with db_connection_transaction(database_path) as connection:
+        # These files are being handled by the incremental and can be ignored by the bulk
+        if is_bulk_running:
+            connection.executemany(FISHER_MODEL.INSERT_IGNORE_RECORDS, insert_files)
 
-        connection.commit()
+        connection.executemany(FISHER_MODEL.DELETE_BY_DIRECTORY_FILENAME, upsert_files)
+        connection.executemany(FISHER_MODEL.INSERT_INCREMENTAL_RECORDS, insert_files)
 
     end_time = time.perf_counter()
 
-    elapsed_time = end_time - start_time
     # Will display in Talon log
     # TODO: should I put this in the background logs or Talon logs
     # (this only is run during incremental by Talon)
     logger.debug(
-        f"FISHer upsert_records: Time taken: {elapsed_time:.6f} seconds (files {len(upsert_files)})"
+        f"FISHer upsert_records: Time taken: {end_time - start_time:.6f} seconds (files {len(upsert_files)})"
     )
+
+
+def bulk_cleanup(database_path: Path):
+    with db_connection_transaction(database_path) as connection:
+        connection.execute(FISHER_MODEL.DELETE_ALL_IGNORE_RECORDS)
+
+
+@contextmanager
+def db_query(
+    database_path: Path, use_row_factory=False
+) -> Generator[sqlite3.Connection, None, None]:
+    with closing(sqlite3.connect(database_path)) as connection:
+        connection.execute("PRAGMA synchronous = NORMAL;")
+
+        # Memory-map up to 256MB of the DB file
+        connection.execute("PRAGMA mmap_size = 268435456;")
+
+        if use_row_factory:
+            connection.row_factory = sqlite3.Row
+
+        yield connection
+
+
+@contextmanager
+def db_connection(database_path: Path) -> Generator[sqlite3.Connection, None, None]:
+    """
+    Manages a SQLite connection safely.
+
+    Automatically ensures the database connection closes properly.
+    """
+    with closing(sqlite3.connect(database_path, timeout=30)) as connection:
+        connection.execute("PRAGMA synchronous = NORMAL;")
+        connection.execute("PRAGMA cache_size = -64000;")  # 64MB cache
+
+        yield connection
+
+
+@contextmanager
+def db_transaction(
+    connection: sqlite3.Connection,
+) -> Generator[sqlite3.Connection, None, None]:
+    """Manages an IMMEDIATE transaction using native sqlite3 rollback/commit logic."""
+    if not connection.in_transaction:
+        connection.execute("BEGIN IMMEDIATE;")
+
+    with connection:
+        yield connection
+
+
+@contextmanager
+def db_connection_transaction(
+    database_path: Path,
+) -> Generator[sqlite3.Connection, None, None]:
+
+    with db_connection(database_path) as connection, db_transaction(connection):
+        yield connection
 
 
 def determine_fisher_lock_path(database_path: Path) -> Path:
@@ -448,7 +598,6 @@ def main():
     file_handler = logging.FileHandler(
         database_path.with_name("file_indexer_search_helper.log")
     )
-    # TODO: write to console during testing
     file_handler.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter(
@@ -456,8 +605,6 @@ def main():
     )
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-
-    # database_path.unlink(missing_ok=True)
 
     fisher_lock_path = determine_fisher_lock_path(database_path)
     unlink_fisher_lock_path = None
@@ -477,6 +624,11 @@ def main():
             FISHER_MODEL.create_database(database_path)
 
         index_files(database_path, target_dir, process_file_group)
+        unlink_fisher_lock_path.unlink(missing_ok=True)
+
+        # Done after lock is released, since while lock exists, could still add records to table
+        # TODO: is this the correct place for this?
+        bulk_cleanup(database_path)
 
         end_time = time.perf_counter()
 
@@ -488,7 +640,7 @@ def main():
         logger.error(f"An error occurred: {e}")
     finally:
         if unlink_fisher_lock_path:
-            unlink_fisher_lock_path.unlink()
+            unlink_fisher_lock_path.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

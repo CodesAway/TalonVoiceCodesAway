@@ -3,11 +3,9 @@ import logging
 import os
 import os.path
 import platform
-import sqlite3
 import subprocess
 import sys
 from collections import deque
-from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +23,7 @@ from talon import (
 from .file_indexer_search_helper_background import (
     FISHER_MODEL,
     create_path_dictionary,
+    db_query,
     determine_fisher_lock_path,
     upsert_records,
 )
@@ -267,8 +266,7 @@ def index_files():
 def search(search_text: str) -> list[dict[str, str]]:
     search_results = []
 
-    with closing(sqlite3.connect(database_path)) as connection:
-        connection.row_factory = sqlite3.Row
+    with db_query(database_path, use_row_factory=True) as connection:
         cursor = connection.execute(FULL_TEXT_SEARCH, (search_text,))
         return [dict(row) for row in cursor]
 
@@ -373,6 +371,7 @@ def process_modified_files():
         except OSError as e:
             logging.error(f"An error occurred: {e}")
 
+    # TODO: limit to 1000 records at a time to reduce wait time when querying (since locks database on writes)
     upsert_records(database_path, upsert_files)
 
 
