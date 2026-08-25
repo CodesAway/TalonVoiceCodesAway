@@ -18,6 +18,8 @@ logger.setLevel(logging.DEBUG)
 DeleteRecord = tuple[int]
 InsertRecord = dict[str, str | int | float]
 
+thread_local = threading.local()
+
 
 def setup_logger(database_path: Path):
     handler = logging.FileHandler(
@@ -153,6 +155,19 @@ def worker(
     dir_queue.task_done()
 
 
+def worker_with_connection_cleanup(
+    database_path: Path,
+    dir_queue: queue.Queue[str],
+    process_batch_fn: WorkerCallable,
+    result: WorkerResult,
+    update_queue: queue.Queue[bool],
+) -> None:
+    try:
+        worker(database_path, dir_queue, process_batch_fn, result, update_queue)
+    finally:
+        close_thread_connection()
+
+
 def update_database(
     database_path: Path, result: WorkerResult, min_change_count=MIN_CHANGE_COUNT
 ):
@@ -209,7 +224,7 @@ def background_index_files(
 
     threads = [
         threading.Thread(
-            target=worker,
+            target=worker_with_connection_cleanup,
             args=(
                 database_path,
                 dir_queue,
@@ -465,7 +480,7 @@ def create_file_dictionary(directory: str, file: os.DirEntry) -> InsertRecord:
 def query_existing_files(
     database_path: Path, directory: str
 ) -> dict[str, dict[str, Any]]:
-    with db_query(database_path, use_row_factory=True) as connection:
+    with db_query(database_path) as connection:
         cursor = connection.execute(FISHER_MODEL.query_by_directory, (directory,))
         rows = cursor.fetchall()
 
@@ -556,20 +571,43 @@ def bulk_cleanup(database_path: Path):
         connection.execute(FISHER_MODEL.DELETE_ALL_IGNORE_RECORDS)
 
 
+def get_thread_connection(database_path: Path):
+    """Retrieves or creates a persistent connection unique to the current thread."""
+    if not hasattr(thread_local, "connection"):
+        connection = sqlite3.connect(database_path)
+        connection.execute("PRAGMA synchronous=NORMAL;")
+        connection.execute("PRAGMA mmap_size=268435456;")  # 256MB memory-mapped I/O
+        connection.row_factory = sqlite3.Row
+
+        thread_local.connection = connection
+
+    return thread_local.connection
+
+
 @contextmanager
-def db_query(
-    database_path: Path, use_row_factory=False
-) -> Generator[sqlite3.Connection, None, None]:
-    with closing(sqlite3.connect(database_path)) as connection:
-        connection.execute("PRAGMA synchronous = NORMAL;")
-
-        # Memory-map up to 256MB of the DB file
-        connection.execute("PRAGMA mmap_size = 268435456;")
-
-        if use_row_factory:
-            connection.row_factory = sqlite3.Row
-
+def db_query(database_path: Path) -> Generator[sqlite3.Connection, None, None]:
+    connection = get_thread_connection(database_path)
+    try:
         yield connection
+        # Do NOT close the connection here; let it persist for subsequent queries
+    except Exception:
+        connection.rollback()
+        raise
+
+
+def close_thread_connection():
+    """Safely closes the database connection assigned to the current thread."""
+    connection = getattr(thread_local, "connection", None)
+    if not connection:
+        return
+
+    try:
+        connection.close()
+    except sqlite3.Error:
+        pass  # Ignore errors if already closed
+    finally:
+        # Delete the reference so the thread object can be garbage collected
+        delattr(thread_local, "connection")
 
 
 @contextmanager
