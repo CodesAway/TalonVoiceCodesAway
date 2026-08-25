@@ -121,9 +121,16 @@ def worker(
             # TODO: What if an error is thrown, should I still handle the files?
             # TODO: may need to multiprocess the process_batch_fn if it is CPU bound, but that would require more complex design
             if files:
-                batch_delete_count, batch_insert_count, batch_update_count = (
-                    process_batch_fn(database_path, current_dir, files, result)
-                )
+                try:
+                    batch_delete_count, batch_insert_count, batch_update_count = (
+                        process_batch_fn(database_path, current_dir, files, result)
+                    )
+                except Exception:
+                    # A single problematic directory must not terminate a worker and
+                    # leave the directory queue blocked forever.
+                    logger.exception("Error processing files in %s", current_dir)
+                    continue
+
                 delete_count += batch_delete_count
                 insert_count += batch_insert_count
                 update_count += batch_update_count
@@ -133,8 +140,8 @@ def worker(
 
         except (PermissionError, FileNotFoundError):
             pass
-        except OSError as e:
-            logger.error(f"Error processing {current_dir}: {e}")
+        except OSError:
+            logger.exception("Error processing directory: %s", current_dir)
         finally:
             dir_queue.task_done()
 
@@ -164,7 +171,7 @@ def update_database(
             elif isinstance(change, dict):  # InsertRecord
                 database_inserts.append(change)
             else:
-                logger.error(f"Unexpected change: {change}")
+                logger.error("Unexpected change: %s", change)
 
         FISHER_MODEL.bulk_upsert_records(
             database_path, database_deletes, database_inserts
@@ -177,8 +184,12 @@ def update_database_worker(
     result: WorkerResult,
 ) -> None:
     for _ in iter(update_queue.get, False):
-        update_database(database_path, result)
-        update_queue.task_done()
+        try:
+            update_database(database_path, result)
+        except Exception:
+            logger.exception("Error updating the database")
+        finally:
+            update_queue.task_done()
 
     # Acknowledge the 'False' sentinel task so update_queue.join() unblocks cleanly
     update_queue.task_done()
@@ -248,9 +259,9 @@ def background_index_files(
     inserts = sum(worker_result.insert_counts)
     updates = sum(worker_result.update_counts)
 
-    logger.info(f"Deleting  files: {deletes}")
-    logger.info(f"Inserting files: {inserts}")
-    logger.info(f"Updating  files: {updates}")
+    logger.info("Deleting  files: %d", deletes)
+    logger.info("Inserting files: %d", inserts)
+    logger.info("Updating  files: %d", updates)
 
     # TODO: need to add this after running bulk operations to improve performance and reduce fragmentation (though it may take a long time to run)
     # https://www.techonthenet.com/sqlite/auto_vacuum.php
@@ -411,7 +422,7 @@ class FisherModel:
         elapsed_time = end_time - start_time
 
         if elapsed_time >= 1:
-            logger.debug(f"bulk_upsert_records took {elapsed_time:.2f} seconds.")
+            logger.debug("bulk_upsert_records took %.2f seconds.", elapsed_time)
 
 
 FISHER_MODEL = FisherModel()
@@ -477,8 +488,8 @@ def process_file_group(
     for file in files:
         try:
             file_detail = create_file_dictionary(dir_path, file)
-        except OSError as e:
-            logger.error(f"An error occurred: {e}")
+        except OSError:
+            logger.exception("Error processing file: %s", file)
             continue
 
         key = file.name
@@ -534,7 +545,9 @@ def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
     # TODO: should I put this in the background logs or Talon logs
     # (this only is run during incremental by Talon)
     logger.debug(
-        f"FISHer upsert_records: Time taken: {end_time - start_time:.6f} seconds (files {len(upsert_files)})"
+        "FISHer upsert_records: Time taken: %.6f seconds (files %d)",
+        end_time - start_time,
+        len(upsert_files),
     )
 
 
@@ -612,17 +625,17 @@ def main():
     fisher_lock_path = determine_fisher_lock_path(database_path)
     unlink_fisher_lock_path = None
     try:
-        if fisher_lock_path.exists():
-            logger.error(f"Indexer is already running, see {fisher_lock_path}")
+        try:
+            with fisher_lock_path.open("x") as file:
+                unlink_fisher_lock_path = fisher_lock_path
+
+                pid = os.getpid()
+                file.write(str(pid))
+        except OSError:
+            logger.error("Indexer is already running, see %s", fisher_lock_path)
             return
 
-        with fisher_lock_path.open("x") as file:
-            unlink_fisher_lock_path = fisher_lock_path
-
-            pid = os.getpid()
-            file.write(str(pid))
-
-        logger.debug(f"Database path: {database_path}")
+        logger.debug("Database path: %s", database_path)
         if not database_path.exists():
             FISHER_MODEL.create_database(database_path)
 
@@ -635,12 +648,10 @@ def main():
 
         end_time = time.perf_counter()
 
-        logger.debug(f"Completed processing in {end_time - start_time:.2f} seconds.")
+        logger.debug("Completed processing in %.2f seconds.", end_time - start_time)
 
         # TODO: optimize database after each bulk run
         # https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
-    except (OSError, ValueError) as e:
-        logger.error(f"An error occurred: {e}")
     finally:
         if unlink_fisher_lock_path:
             unlink_fisher_lock_path.unlink(missing_ok=True)
