@@ -266,7 +266,7 @@ def index_files():
 def search(search_text: str) -> list[dict[str, str]]:
     search_results = []
 
-    with db_query(database_path, use_row_factory=True) as connection:
+    with db_query(database_path) as connection:
         cursor = connection.execute(FULL_TEXT_SEARCH, (search_text,))
         return [dict(row) for row in cursor]
 
