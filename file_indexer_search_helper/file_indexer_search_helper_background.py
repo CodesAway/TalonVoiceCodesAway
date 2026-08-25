@@ -540,8 +540,6 @@ def process_file_group(
 
 # This handles the incremental indexing
 def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
-    start_time = time.perf_counter()
-
     # size = -1 (special marker to indicate file no longer exists)
     insert_files = [e for e in upsert_files if e["size"] != -1]
     is_bulk_running = determine_fisher_lock_path(database_path).exists()
@@ -553,17 +551,6 @@ def upsert_records(database_path: Path, upsert_files: list[dict[str, Any]]):
 
         connection.executemany(FISHER_MODEL.DELETE_BY_DIRECTORY_FILENAME, upsert_files)
         connection.executemany(FISHER_MODEL.INSERT_INCREMENTAL_RECORDS, insert_files)
-
-    end_time = time.perf_counter()
-
-    # Will display in Talon log
-    # TODO: should I put this in the background logs or Talon logs
-    # (this only is run during incremental by Talon)
-    logger.debug(
-        "FISHer upsert_records: Time taken: %.6f seconds (files %d)",
-        end_time - start_time,
-        len(upsert_files),
-    )
 
 
 def bulk_cleanup(database_path: Path):
