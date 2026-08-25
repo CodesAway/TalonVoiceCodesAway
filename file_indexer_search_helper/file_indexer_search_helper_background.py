@@ -19,6 +19,19 @@ DeleteRecord = tuple[int]
 InsertRecord = dict[str, str | int | float]
 
 
+def setup_logger(database_path: Path):
+    handler = logging.FileHandler(
+        database_path.with_name("file_indexer_search_helper.log")
+    )
+    handler.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(
+        "[%(threadName)s] %(asctime)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
 @dataclass
 class WorkerResult:
     database_changes: deque[DeleteRecord | InsertRecord] = field(
@@ -594,17 +607,7 @@ def main():
     target_dir = "C:\\"
 
     database_path = Path(sys.argv[1])
-
-    file_handler = logging.FileHandler(
-        database_path.with_name("file_indexer_search_helper.log")
-    )
-    file_handler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        "[%(threadName)s] %(asctime)s - %(levelname)s - %(message)s"
-    )
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    setup_logger(database_path)
 
     fisher_lock_path = determine_fisher_lock_path(database_path)
     unlink_fisher_lock_path = None
