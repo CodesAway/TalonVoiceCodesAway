@@ -1,0 +1,7 @@
+list: user.incode_file_extension
+-
+
+md:                                             code
+pdf:                                            PDFXEdit
+py:                                             code
+svg:                                            inkscape
