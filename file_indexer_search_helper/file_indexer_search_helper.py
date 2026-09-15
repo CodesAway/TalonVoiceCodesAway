@@ -29,6 +29,7 @@ from .file_indexer_search_helper_background import (
 )
 
 has_humanfriendly = False
+logger = logging.getLogger(__name__)
 
 try:
     import humanfriendly
@@ -36,7 +37,7 @@ try:
     has_humanfriendly = True
 except ModuleNotFoundError:
     # Error handling
-    logging.info(
+    logger.info(
         "Dependency humanfriendly isn't available (using default date / time format)"
     )
 
@@ -218,7 +219,7 @@ def handle_stale_fisher_lock() -> bool:
         return False
     else:
         # PID is stale (since not Python)
-        logging.debug("FISHer deleted stale lock")
+        logger.debug("FISHer deleted stale lock")
         fisher_lock_path.unlink()
         return True
 
@@ -230,13 +231,13 @@ def index_files():
         fisher_subprocess_is_running = fisher_subprocess.poll() is None
         if fisher_subprocess_is_running:
             # Note: would only get this error if set cron interval too low and prior process didn't finish
-            logging.debug(
+            logger.debug(
                 "FISHer subprocess is still running (try increasing cron interval)"
             )
             return
 
     if not handle_stale_fisher_lock():
-        logging.debug("FISHer lock remains (don't start another process)")
+        logger.debug("FISHer lock remains (don't start another process)")
         return
 
     file_path = (
@@ -255,9 +256,7 @@ def index_files():
     fisher_command = [python_executable, file_path, database_path]
     # TODO: add error handling (in case script breaks)
     fisher_subprocess = subprocess.Popen(fisher_command, shell=True)
-    logging.debug(
-        f"FISHer started background indexing with PID {fisher_subprocess.pid}"
-    )
+    logger.debug(f"FISHer started background indexing with PID {fisher_subprocess.pid}")
 
 
 # TODO: show only 10 results and show directory / filename on separate lines with spacer?
@@ -299,7 +298,7 @@ def on_ready():
     #     determine_fisher_lock_path(database_path),
     #     Path(__file__).resolve().parent / "file_indexer_search_helper.log",
     # )
-    # logging.info(f"FISHer Ignore: {ignore_fisher_paths}")
+    # logger.info(f"FISHer Ignore: {ignore_fisher_paths}")
 
     # TODO: add support for watching directories with recent changes
     # (to allow a dynamic list of instant updates in addition to the 10 minute polling)
@@ -359,17 +358,17 @@ def process_modified_files():
     # Handle duplicates
     process_modified_files = set(process_modified_files)
 
-    # logging.debug("FISHer process modified files:")
+    # logger.debug("FISHer process modified files:")
     # TODO: You get notified when files are deleted as well!
     # This allows full processing (if file doesn't exist, delete from index)
     upsert_files: list[dict[str, Any]] = []
 
     for path in process_modified_files:
-        # logging.debug(path)
+        # logger.debug(path)
         try:
             upsert_files.append(create_path_dictionary(path))
         except OSError as e:
-            logging.error(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
 
     # TODO: limit to 1000 records at a time to reduce wait time when querying (since locks database on writes)
     upsert_records(database_path, upsert_files)
@@ -417,7 +416,7 @@ class Actions:
     def fisher_get_search_result_pathname(index: int) -> str:
         """Gets the search results pathname at the specified index"""
         if not fisher_search_results:
-            logging.debug("FISHer has no search results")
+            logger.debug("FISHer has no search results")
             return ""
 
         # Subtract 1 to convert from 1-based to 0-based index
@@ -461,7 +460,7 @@ class Actions:
                     fisher_program
                 )
                 if not program_pathname:
-                    logging.error(
+                    logger.error(
                         f"Could not find program named '{fisher_program}' in user.fisher_programs"
                     )
                     return
