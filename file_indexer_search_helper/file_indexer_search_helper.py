@@ -321,7 +321,8 @@ modified_files_job = None
 
 def on_watch(path, flags):
     global modified_files_job
-    path = Path(path)
+    # Use resolve to get the correct casing from file system (prevents duplicates in database on Windows)
+    path = Path(path).resolve()
 
     # print(f"{path} ({flags})")
     # if path in ignore_fisher_paths:
