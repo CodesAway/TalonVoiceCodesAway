@@ -44,6 +44,11 @@ class WorkerResult:
     insert_counts: deque[int] = field(default_factory=deque, init=False)
     update_counts: deque[int] = field(default_factory=deque, init=False)
 
+    # Temporarily tracks directories to remove from delete_directories (message queue of sorts)
+    existing_directories: deque[str] = field(default_factory=deque, init=False)
+    # Only modified from writer thread
+    delete_directories: set[str] = field(default_factory=set, init=False)
+
 
 WorkerCallable = Callable[
     [Path, str, list[os.DirEntry], WorkerResult], tuple[int, int, int]
@@ -173,6 +178,12 @@ def update_database(
 ):
     # Strictly greater than to handle min_change_count=0 meaning ALL records (final group)
     while len(result.database_changes) > min_change_count:
+        existing_directories = {
+            result.existing_directories.popleft()
+            for _ in range(len(result.existing_directories))
+        }
+        result.delete_directories.difference_update(existing_directories)
+
         database_deletes: deque[DeleteRecord] = deque()
         database_inserts: deque[InsertRecord] = deque()
 
@@ -221,6 +232,7 @@ def background_index_files(
 
     worker_result = WorkerResult()
     update_queue: queue.Queue[bool] = queue.Queue()
+    FISHER_MODEL.initialize_delete_directories(database_path, worker_result)
 
     threads = [
         threading.Thread(
@@ -270,13 +282,15 @@ def background_index_files(
     if worker_result.database_changes:
         update_database(database_path, worker_result, 0)
 
+    FISHER_MODEL.delete_directories(database_path, worker_result)
+
     deletes = sum(worker_result.delete_counts)
     inserts = sum(worker_result.insert_counts)
     updates = sum(worker_result.update_counts)
 
-    logger.info("Deleting  files: %d", deletes)
-    logger.info("Inserting files: %d", inserts)
-    logger.info("Updating  files: %d", updates)
+    logger.info("Deleted  files: %d", deletes)
+    logger.info("Inserted files: %d", inserts)
+    logger.info("Updated  files: %d", updates)
 
     # TODO: need to add this after running bulk operations to improve performance and reduce fragmentation (though it may take a long time to run)
     # https://www.techonthenet.com/sqlite/auto_vacuum.php
@@ -296,6 +310,7 @@ class FisherModel:
 
     select_count = f"select count(1) as count from {table_name}"
 
+    query_distinct_directories = f"select distinct directory from {table_name}"
     query_by_directory = f"select rowid, directory, name, size, modified_time, version from {table_name} where directory = ?"
 
     # TODO: does the user ever need to change this (or is this when I update the code?)
@@ -409,6 +424,16 @@ class FisherModel:
             values (:directory, :name)
             """
 
+    DELETE_BY_DIRECTORY_HANDLE_IGNORE = f"""
+            delete from {table_name}
+            where directory = :directory
+            and not exists (
+                select 1
+                from {ignore_table_name}
+                where directory = :directory
+            )
+            """
+
     DELETE_ALL_IGNORE_RECORDS = f"DELETE FROM {ignore_table_name}"
 
     def create_database(self, database_path: Path):
@@ -438,6 +463,36 @@ class FisherModel:
 
         if elapsed_time >= 1:
             logger.debug("bulk_upsert_records took %.2f seconds.", elapsed_time)
+
+    def initialize_delete_directories(
+        self, database_path: Path, worker_result: WorkerResult
+    ):
+        with db_query(database_path) as connection:
+            cursor = connection.execute(self.query_distinct_directories)
+            rows = cursor.fetchall()
+
+        worker_result.delete_directories.update(row["directory"] for row in rows)
+
+    def delete_directories(self, database_path: Path, worker_result: WorkerResult):
+        worker_result.delete_directories.difference_update(
+            worker_result.existing_directories
+        )
+
+        worker_result.existing_directories.clear()
+
+        if not worker_result.delete_directories:
+            return
+
+        delete_directories = [
+            {"directory": directory} for directory in worker_result.delete_directories
+        ]
+
+        with db_connection_transaction(database_path) as connection:
+            connection.executemany(
+                self.DELETE_BY_DIRECTORY_HANDLE_IGNORE, delete_directories
+            )
+
+        logger.info("Deleted directories: %d", len(delete_directories))
 
 
 FISHER_MODEL = FisherModel()
@@ -494,6 +549,7 @@ def process_file_group(
     worker_result: WorkerResult,
 ) -> tuple[int, int, int]:
 
+    worker_result.existing_directories.append(dir_path)
     existing_records = query_existing_files(database_path, dir_path)
     files_to_delete = set(existing_records.keys())
     changes: list[DeleteRecord | InsertRecord] = []
@@ -677,6 +733,8 @@ def main():
 
         # TODO: optimize database after each bulk run
         # https://medium.com/@johnidouglasmarangon/full-text-search-in-sqlite-a-practical-guide-80a69c3f42a4
+    except Exception:
+        logger.exception("")
     finally:
         if unlink_fisher_lock_path:
             unlink_fisher_lock_path.unlink(missing_ok=True)

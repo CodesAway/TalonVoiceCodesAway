@@ -251,9 +251,6 @@ modified_files_job = None
 
 
 def on_watch(path, flags):
-    print(f"incode on_watch: {path} ({flags})")
-    return
-
     global modified_files_job
     # Use resolve to get the correct casing from file system (prevents duplicates in database on Windows)
     path = Path(path).resolve()
