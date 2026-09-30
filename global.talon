@@ -59,13 +59,12 @@ hunt all <user.text>:
 
 <user.codesaway_number_prose_prefixed>:         "{codesaway_number_prose_prefixed}"
 
-<user.text_codesaway> flows:
-    user.fill_flow(text_codesaway)
+<user.text_codesaway> flows:                    user.fill_flow(text_codesaway)
 
 selection flows:
     value = edit.selected_text()
     user.fill_flow(value)
 
-dot gov:                                        insert('.gov')
+dot gov:                                        insert(".gov")
 
 path <user.system_path>:                        insert('"{system_path}"')

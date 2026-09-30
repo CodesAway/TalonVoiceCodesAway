@@ -1,11 +1,16 @@
 os: windows
 -
+
 # Reference: https://github.com/AndreasArvidsson/andreas-talon/blob/master/core/operating_system/operating_system.talon
-^system shutdown please$:                       user.exec("shutdown /s")
-^system restart please$:                        user.exec("shutdown /r")
-^system lock$:
+^system shutdown please$:
+    user.exec("shutdown /s")
     user.sleep_all()
+^system restart please$:
+    user.exec("shutdown /r")
+    user.sleep_all()
+^system lock$:
     user.exec("Rundll32.exe user32.dll,LockWorkStation")
+    user.sleep_all()
 
 key(ctrl-alt-space):                            user.hud_toggle_microphone()
 key(ctrl-shift-space):                          user.screenshot()
