@@ -204,8 +204,9 @@ def index_files():
         python_executable,
         file_path,
         database_path,
-        # Directories to index (can be multiple)
+        # Directories to index (can be multiple; used same as fs.watch directories)
         actions.path.talon_user(),
+        r"C:\Users\cross\Dropbox\Documents\My Documents",
     ]
     print(f"Incode command: {incode_command}")
 
@@ -240,7 +241,8 @@ def on_ready():
     cron.after("0s", index_files)
 
     fs.watch(actions.path.talon_user(), on_watch)
-    fs.watch(r"C:\Users\cross\Dropbox\Documents\My Documents\Python Random", on_watch)
+    fs.watch(r"C:\Users\cross\Dropbox\Documents\My Documents", on_watch)
+    # fs.watch(r"C:\Users\cross\Dropbox\Documents\My Documents\Python Random", on_watch)
     # fs.watch("C:\\Users\\cross\\Dropbox\\Documents", on_watch)
 
     # search("ada dis*")
