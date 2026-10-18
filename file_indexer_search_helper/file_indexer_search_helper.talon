@@ -1,6 +1,7 @@
 ^fisher$:                                       user.fisher_toggle_search_results()
 fisher clip:                                    user.fisher_search(clip.text())
-fisher hunt <user.text_codesaway>:              user.fisher_draft(text_codesaway)
+fisher hunt <user.text_codesaway>:              user.fisher_search(text_codesaway)
+fisher draft <user.text_codesaway>:             user.fisher_draft(text_codesaway)
 fisher show:                                    user.fisher_draft("")
 fisher hide:                                    user.draft_hide()
 

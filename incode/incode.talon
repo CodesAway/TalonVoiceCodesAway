@@ -1,6 +1,7 @@
 ^incode$:                                       user.incode_toggle_search_results()
 incode clip:                                    user.incode_search(clip.text())
-incode hunt <user.text_codesaway>:              user.incode_draft(text_codesaway)
+incode hunt <user.text_codesaway>:              user.incode_search(text_codesaway)
+incode draft <user.text_codesaway>:             user.incode_draft(text_codesaway)
 incode show:                                    user.incode_draft("")
 incode hide:                                    user.draft_hide()
 
