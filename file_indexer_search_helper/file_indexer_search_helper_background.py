@@ -367,6 +367,8 @@ class FisherModel:
     END;
     """
 
+    # SQLite doesn't support porter and trigram together...learned 2026-10-18
+    # Don't use porter stemmer since can be wonky with code and variable names
     CREATE_FULL_TEXT_SEARCH = f"""
 
     CREATE TABLE IF NOT EXISTS {table_name}(rowid INTEGER PRIMARY KEY, {STORED_COLUMN_NAMES});
@@ -376,7 +378,7 @@ class FisherModel:
 
     alter table {table_name} add column extension AS (lower(substr(name, instr(name, '.') + 1)));
 
-    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{table_name}', tokenize = 'porter trigram');
+    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{table_name}', tokenize = 'trigram');
 
     {CREATE_TRIGGERS}
 

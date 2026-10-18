@@ -414,7 +414,9 @@ class IncodeModel:
     END;
     """
 
-    # TODO: add     {CREATE_TRIGGERS} after create virtal table
+    # SQLite doesn't support porter and trigram together...learned 2026-10-18
+    # Don't use porter stemmer since can be wonky with code and variable names
+    # running
     CREATE_FULL_TEXT_SEARCH = f"""
     CREATE TABLE IF NOT EXISTS {table_name}(rowid INTEGER PRIMARY KEY, {STORED_COLUMN_NAMES});
 
@@ -425,12 +427,15 @@ class IncodeModel:
 
     CREATE TABLE IF NOT EXISTS {line_table_name}(rowid INTEGER PRIMARY KEY, {LINE_STORED_COLUMN_NAMES});
 
+    CREATE INDEX IF NOT EXISTS ix__{line_table_name}__file_id
+    ON {line_table_name}(file_id);
+
     CREATE VIEW IF NOT EXISTS {view_name} AS
     select l.rowid, {STORED_COLUMN_NAMES}, {LINE_STORED_COLUMN_NAMES}
     from {table_name} f
     join {line_table_name} l on l.file_id = f.rowid;
 
-    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{view_name}', tokenize = 'porter trigram');
+    CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE_NAME} USING fts5({FTS_COLUMN_NAMES}, content='{view_name}', tokenize = 'trigram');
 
     {CREATE_TRIGGERS}
 
